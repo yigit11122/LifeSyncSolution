@@ -37,3 +37,5 @@ function getCalendarData() {
             document.getElementById("events").innerHTML = "Hata: " + error.message;
         });
 }
+
+            
