@@ -1,0 +1,34 @@
+﻿@{
+    ViewData["Title"] = "LifeSync - Kişisel Dashboard";
+}
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <h1>LifeSync’e Hoş Geldiniz</h1>
+        <p>Görevlerinizi, notlarınızı ve alışkanlıklarınızı tek yerden yönetin!</p>
+    </header>
+    <main>
+        <section>
+            <h2>Görevlerim</h2>
+            <button onclick="getCalendarData()">Google Takvimden Görev Çek</button>
+            <div id="events"></div>
+        </section>
+    </main>
+    <footer>
+        <p>© 2025 LifeSync Ekibi</p>
+    </footer>
+
+    <!-- Axios kütüphanesi -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- Kendi kodumuz -->
+    <script src="~/js/site.js" asp-append-version="true"></script>
+</body>
+</html>
