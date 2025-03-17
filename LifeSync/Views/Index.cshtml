@@ -1,95 +1,69 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-    <title>LifeSync - Todoist Bağlantısı</title>
+    <title>LifeSync Dashboard</title>
     <link rel="stylesheet" href="/css/site.css">
 </head>
 <body>
     <h1>LifeSync Dashboard</h1>
-    <button id="connect-todoist">Connect with Todoist</button>
-    <h2>Todoist Görevlerim</h2>
-    <ul id="task-list"></ul>
+
+    <div>
+        <button id="connect-todoist">Connect with Todoist</button>
+        <h2>Todoist Görevlerim</h2>
+        <div id="todoist-list"></div>
+    </div>
+
+    <div>
+        <button id="connect-google">Connect with Google Calendar</button>
+        <h2>Google Takvim Etkinliklerim</h2>
+        <div id="googleCalendar-list"></div>
+    </div>
+
+    <div>
+        <button id="connect-notion">Connect with Notion</button>
+        <h2>Notion Sayfalarım</h2>
+        <div id="notion-list"></div>
+    </div>
+
+    <div>
+        <button id="fetch-lifeSync">Fetch LifeSync Data</button>
+        <h2>LifeSync Verilerim</h2>
+        <div id="lifeSync-list"></div>
+    </div>
+
+    <script src="/js/site.js"></script>
+    <script src="/js/todoist.js"></script>
+    <script src="/js/googleCalendar.js"></script>
+    <script src="/js/notion.js"></script>
+    <script src="/js/lifeSync.js"></script>
 
     <script>
-        // Todoist OAuth parametreleri
-        const clientId = 308492663f7d4e46bb620b9c75bff1d2; // Todoist’ten aldığın Client ID
-        const redirectUri = 'https://localhost:7263/'; // Redirect URI (aynı sayfa)
-        const scope = 'data:read';
-
-        // "Connect with Todoist" butonuna tıklama işlemi
-        document.getElementById('connect-todoist').addEventListener('click', () => {
-            const state = Math.random().toString(36).substring(2); // Rastgele state
-            const authUrl = `https://todoist.com/oauth/authorize?client_id=${clientId}&scope=${scope}&state=${state}&redirect_uri=${redirectUri}&response_type=token`;
-            window.location.href = authUrl; // Kullanıcıyı Todoist’e yönlendir
-        });
-
-        // URL’den access token’ı al
-        function getAccessTokenFromUrl() {
-            const hash = window.location.hash; // URL’deki fragment’ı al (#access_token=...)
-            if (hash) {
-                const params = new URLSearchParams(hash.substring(1)); // Fragment’ı parse et
-                const accessToken = params.get('access_token');
-                if (accessToken) {
-                    localStorage.setItem('todoist_access_token', accessToken); // Token’ı localStorage’a kaydet
-                    window.location.hash = ''; // URL’yi temizle
-                    return accessToken;
-                }
-            }
-            return null;
-        }
-
-        // Todoist API’den görevleri çek
-        async function fetchTodoistTasks(accessToken) {
-            try {
-                const response = await fetch('https://api.todoist.com/rest/v2/tasks', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                    },
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Todoist API isteği başarısız: ${response.status}`);
-                }
-
-                const tasks = await response.json();
-                return tasks;
-            } catch (error) {
-                console.error('Hata:', error);
-                return null;
-            }
-        }
-
-        // Görevleri ekranda göster
-        function displayTasks(tasks) {
-            const taskList = document.getElementById('task-list');
-            if (!taskList) return;
-
-            taskList.innerHTML = ''; // Önceki görevleri temizle
-            tasks.forEach(task => {
-                const taskItem = document.createElement('li');
-                taskItem.textContent = task.content; // Görevin başlığını yazdır
-                taskList.appendChild(taskItem);
-            });
-        }
+        // Butonlara tıklama olaylarını ekle
+        document.getElementById('connect-todoist').addEventListener('click', initiateTodoistOAuth);
+        document.getElementById('connect-google').addEventListener('click', initiateGoogleCalendarOAuth);
+        document.getElementById('connect-notion').addEventListener('click', initiateNotionOAuth);
+        document.getElementById('fetch-lifeSync').addEventListener('click', startLifeSyncPolling);
 
         // Sayfa yüklendiğinde çalışacak kod
         window.onload = async () => {
-            // Önce URL’den access token’ı al
-            let accessToken = getAccessTokenFromUrl();
+            // Todoist
+            const todoistTasks = await fetchDataFromBackend('todoist');
+            if (todoistTasks) displayData(todoistTasks, 'todoist');
+            startTodoistPolling();
 
-            // Eğer URL’de token yoksa, localStorage’dan al
-            if (!accessToken) {
-                accessToken = localStorage.getItem('todoist_access_token');
-            }
+            // Google Calendar
+            const googleEvents = await fetchDataFromBackend('googleCalendar');
+            if (googleEvents) displayData(googleEvents, 'googleCalendar');
+            startGoogleCalendarPolling();
 
-            // Eğer token varsa, görevleri çek
-            if (accessToken) {
-                const tasks = await fetchTodoistTasks(accessToken);
-                if (tasks) {
-                    displayTasks(tasks);
-                }
-            }
+            // Notion
+            const notionPages = await fetchDataFromBackend('notion');
+            if (notionPages) displayData(notionPages, 'notion');
+            startNotionPolling();
+
+            // LifeSync
+            const lifeSyncData = await fetchDataFromBackend('lifeSync');
+            if (lifeSyncData) displayData(lifeSyncData, 'lifeSync');
         };
     </script>
 </body>
