@@ -1,22 +1,31 @@
 using Microsoft.Extensions.DependencyInjection;
 using Swashbuckle.AspNetCore.SwaggerGen;
-
-
 using Microsoft.EntityFrameworkCore;
-using backend.models; // DbContext sýnýfýmýzý ekledik
+using backend.models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// PostgreSQL baðlantýsýný yapýlandýralým
-var connectionString = builder.Configuration.GetConnectionString("PostgreSQLConnection");
-builder.Services.AddDbContext<LifeSyncDbContext>(options =>
-    options.UseNpgsql(connectionString));
-
-builder.Services.AddControllers(); // API desteði ekleyelim
+builder.Services.AddControllers();
 builder.Services.AddRazorPages();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// PostgreSQL baðlantýsýný ekle
+var connectionString = builder.Configuration.GetConnectionString("PostgreSQLConnection");
+builder.Services.AddDbContext<LifeSyncDbContext>(options =>
+    options.UseNpgsql(connectionString));
+
+// CORS ayarlarý (OAuth için gerekli olabilir)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
 
 var app = builder.Build();
 
@@ -30,26 +39,10 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+app.UseCors("AllowAll");
 app.UseAuthorization();
 
 app.MapControllers();
 app.MapRazorPages();
 
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<LifeSyncDbContext>();
-
-    try
-    {
-        var taskCount = context.Tasks.Count();
-        Console.WriteLine($"Database connection is successful. Tasks count: {taskCount}");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Database connection failed: {ex.Message}");
-    }
-}
-
 app.Run();
-
-
