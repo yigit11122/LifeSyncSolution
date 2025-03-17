@@ -1,15 +1,28 @@
+using Microsoft.Extensions.DependencyInjection;
+using Swashbuckle.AspNetCore.SwaggerGen;
+
+
+using Microsoft.EntityFrameworkCore;
+using backend.models; // DbContext sýnýfýmýzý ekledik
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// PostgreSQL baðlantýsýný yapýlandýralým
+var connectionString = builder.Configuration.GetConnectionString("PostgreSQLConnection");
+builder.Services.AddDbContext<LifeSyncDbContext>(options =>
+    options.UseNpgsql(connectionString));
+
+builder.Services.AddControllers(); // API desteði ekleyelim
 builder.Services.AddRazorPages();
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -17,9 +30,9 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
 app.UseAuthorization();
 
+app.MapControllers();
 app.MapRazorPages();
 
 app.Run();
