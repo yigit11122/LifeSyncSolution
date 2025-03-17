@@ -9,6 +9,8 @@ namespace backend.models
         public DbSet<TaskItem> Tasks { get; set; }
         public DbSet<Event> Events { get; set; }
         public DbSet<Note> Notes { get; set; }
+
+
     }
 
     public class TaskItem
