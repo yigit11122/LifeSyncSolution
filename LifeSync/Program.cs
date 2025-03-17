@@ -35,4 +35,21 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapRazorPages();
 
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<LifeSyncDbContext>();
+
+    try
+    {
+        var taskCount = context.Tasks.Count();
+        Console.WriteLine($"Database connection is successful. Tasks count: {taskCount}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Database connection failed: {ex.Message}");
+    }
+}
+
 app.Run();
+
+

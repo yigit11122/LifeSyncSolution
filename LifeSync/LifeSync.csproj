@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="src\backend\controllers\" />
     <Folder Include="tests\" />
     <Folder Include="src\backend\config\" />
     <Folder Include="src\backend\routes\" />
