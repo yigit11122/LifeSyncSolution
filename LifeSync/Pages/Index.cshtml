@@ -43,21 +43,30 @@
         <div id="firebase-list"></div>
     </div>
 
+    <!-- Fitbit Bölümü -->
+    <div class="integration-section">
+        <h2>Fitbit Aktivitelerim</h2>
+        <button id="connect-fitbit">Connect with Fitbit</button>
+        <div id="fitbit-list"></div>
+    </div>
+
     <!-- JavaScript Dosyalarını Dahil Et -->
     <script src="/js/site.js"></script>
     <script src="/js/todoist.js"></script>
     <script src="/js/googleCalendar.js"></script>
     <script src="/js/notion.js"></script>
     <script src="/js/firebase.js"></script>
+    <script src="/js/fitbit.js"></script>
 
     <script>
-        // Butonlara tıklama olaylarını ekle (JS dosyalarına bağımlı)
+        // Butonlara tıklama olaylarını ekle
         document.getElementById('connect-todoist')?.addEventListener('click', initiateTodoistOAuth);
         document.getElementById('connect-google')?.addEventListener('click', initiateGoogleCalendarOAuth);
         document.getElementById('connect-notion')?.addEventListener('click', initiateNotionOAuth);
         document.getElementById('fetch-firebase')?.addEventListener('click', startFirebasePolling);
+        document.getElementById('connect-fitbit')?.addEventListener('click', initiateFitbitOAuth);
 
-        // Sayfa yüklendiğinde verileri çek (backend hazır olduğunda çalışacak)
+        // Sayfa yüklendiğinde verileri çek
         window.onload = async () => {
             try {
                 const todoistTasks = await fetchDataFromBackend('todoist');
@@ -71,6 +80,9 @@
 
                 const firebaseData = await fetchDataFromBackend('firebase');
                 if (firebaseData) displayData(firebaseData, 'firebase');
+
+                const fitbitData = await fetchDataFromBackend('fitbit');
+                if (fitbitData) displayData(fitbitData, 'fitbit');
             } catch (error) {
                 console.error('Veri çekme hatası:', error);
             }

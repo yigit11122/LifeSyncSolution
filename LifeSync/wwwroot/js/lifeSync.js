@@ -1,37 +1,28 @@
-﻿// js/lifeSync.js
-let lastLifeSyncFetchTime = 0;
+﻿// wwwroot/js/firebase.js
+let lastFirebaseFetchTime = 0;
 const FETCH_INTERVAL = 60000;
 
-// LifeSync veritabanından verileri çek
-async function fetchLifeSyncData() {
+async function fetchFirebaseData() {
     const now = Date.now();
-    if (now - lastLifeSyncFetchTime < FETCH_INTERVAL) return;
+    if (now - lastFirebaseFetchTime < FETCH_INTERVAL) return;
 
     try {
-        const response = await fetch('/api/lifeSync/data', {
-            method: 'GET',
-            credentials: 'include',
-        });
-
-        if (!response.ok) {
-            throw new Error(`LifeSync API isteği başarısız: ${response.status}`);
-        }
-
+        const response = await fetch('/Index?handler=FetchData&source=firebase', { credentials: 'include' });
+        if (!response.ok) throw new Error(`Firebase veri çekme başarısız: ${response.status}`);
         const rawData = await response.json();
-        const preprocessedData = preprocessTasks(rawData, 'lifeSync');
-        await saveToBackend(preprocessedData, 'lifeSync');
-        lastLifeSyncFetchTime = now;
+        const preprocessedData = preprocessTasks(rawData, 'firebase');
+        await saveToBackend(preprocessedData, 'firebase');
+        lastFirebaseFetchTime = now;
         return preprocessedData;
     } catch (error) {
-        console.error('LifeSync Hata:', error);
+        console.error('Firebase Hata:', error);
         return null;
     }
 }
 
-// Periyodik çekme
-function startLifeSyncPolling() {
+function startFirebasePolling() {
     setInterval(async () => {
-        const data = await fetchLifeSyncData();
-        if (data) displayData(data, 'lifeSync');
+        const data = await fetchFirebaseData();
+        if (data) displayData(data, 'firebase');
     }, FETCH_INTERVAL);
-} 
+}
