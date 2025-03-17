@@ -1,10 +1,80 @@
 ﻿@page
-@model IndexModel
+@model LifeSync.Pages.IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "LifeSync Dashboard";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LifeSync Dashboard</title>
+    <link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+    <h1>LifeSync Dashboard</h1>
+
+    <!-- Todoist Bölümü -->
+    <div class="integration-section">
+        <h2>Todoist Görevlerim</h2>
+        <button id="connect-todoist">Connect with Todoist</button>
+        <div id="todoist-list"></div>
+    </div>
+
+    <!-- Google Calendar Bölümü -->
+    <div class="integration-section">
+        <h2>Google Takvim Etkinliklerim</h2>
+        <button id="connect-google">Connect with Google Calendar</button>
+        <div id="googleCalendar-list"></div>
+    </div>
+
+    <!-- Notion Bölümü -->
+    <div class="integration-section">
+        <h2>Notion Sayfalarım</h2>
+        <button id="connect-notion">Connect with Notion</button>
+        <div id="notion-list"></div>
+    </div>
+
+    <!-- Firebase (LifeSync) Bölümü -->
+    <div class="integration-section">
+        <h2>LifeSync Verilerim (Firebase)</h2>
+        <button id="fetch-firebase">Fetch Firebase Data</button>
+        <div id="firebase-list"></div>
+    </div>
+
+    <!-- JavaScript Dosyalarını Dahil Et -->
+    <script src="/js/site.js"></script>
+    <script src="/js/todoist.js"></script>
+    <script src="/js/googleCalendar.js"></script>
+    <script src="/js/notion.js"></script>
+    <script src="/js/firebase.js"></script>
+
+    <script>
+        // Butonlara tıklama olaylarını ekle (JS dosyalarına bağımlı)
+        document.getElementById('connect-todoist')?.addEventListener('click', initiateTodoistOAuth);
+        document.getElementById('connect-google')?.addEventListener('click', initiateGoogleCalendarOAuth);
+        document.getElementById('connect-notion')?.addEventListener('click', initiateNotionOAuth);
+        document.getElementById('fetch-firebase')?.addEventListener('click', startFirebasePolling);
+
+        // Sayfa yüklendiğinde verileri çek (backend hazır olduğunda çalışacak)
+        window.onload = async () => {
+            try {
+                const todoistTasks = await fetchDataFromBackend('todoist');
+                if (todoistTasks) displayData(todoistTasks, 'todoist');
+
+                const googleEvents = await fetchDataFromBackend('googleCalendar');
+                if (googleEvents) displayData(googleEvents, 'googleCalendar');
+
+                const notionPages = await fetchDataFromBackend('notion');
+                if (notionPages) displayData(notionPages, 'notion');
+
+                const firebaseData = await fetchDataFromBackend('firebase');
+                if (firebaseData) displayData(firebaseData, 'firebase');
+            } catch (error) {
+                console.error('Veri çekme hatası:', error);
+            }
+        };
+    </script>
+</body>
+</html>

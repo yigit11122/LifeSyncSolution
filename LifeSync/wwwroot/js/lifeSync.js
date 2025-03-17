@@ -34,4 +34,4 @@ function startLifeSyncPolling() {
         const data = await fetchLifeSyncData();
         if (data) displayData(data, 'lifeSync');
     }, FETCH_INTERVAL);
-}
+} 

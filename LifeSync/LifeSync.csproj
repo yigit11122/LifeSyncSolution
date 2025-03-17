@@ -13,6 +13,7 @@
     <Folder Include="src\ml\models\" />
     <Folder Include="src\ml\data\" />
     <Folder Include="src\ml\scripts\" />
+    <Folder Include="Views\" />
     <Folder Include="wwwroot\media\" />
   </ItemGroup>
 
