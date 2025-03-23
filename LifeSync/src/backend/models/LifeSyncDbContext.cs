@@ -10,22 +10,32 @@ namespace backend.models
         public DbSet<Event> Events { get; set; }
         public DbSet<Note> Notes { get; set; }
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<TaskItem>(entity =>
+            {
+                entity.ToTable("Tasks", "public");
+            });
 
+            modelBuilder.Entity<Event>(entity =>
+            {
+                entity.ToTable("Events", "public");
+            });
+
+            modelBuilder.Entity<Note>(entity =>
+            {
+                entity.ToTable("Notes", "public");
+            });
+        }
     }
 
     public class TaskItem
     {
         public Guid Id { get; set; }
-
-        // null hatası almamak için boş string atandı
         public string Content { get; set; } = "";
-
         public DateTime? DueDate { get; set; }
         public bool Completed { get; set; } = false;
-
-        // null hatası almamak için boş string atandı
         public string Source { get; set; } = "";
-
         public Guid? UserId { get; set; }
     }
 
@@ -46,5 +56,4 @@ namespace backend.models
         public string Source { get; set; } = "";
         public Guid UserId { get; set; }
     }
-
 }
