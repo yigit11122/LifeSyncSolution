@@ -16,28 +16,35 @@ namespace backend.models
     public class TaskItem
     {
         public Guid Id { get; set; }
-        public string Content { get; set; }
+
+        // null hatası almamak için boş string atandı
+        public string Content { get; set; } = "";
+
         public DateTime? DueDate { get; set; }
         public bool Completed { get; set; } = false;
-        public string Source { get; set; }  // "todoist", "googleCalendar", "notion"
+
+        // null hatası almamak için boş string atandı
+        public string Source { get; set; } = "";
+
         public Guid? UserId { get; set; }
     }
 
     public class Event
     {
         public Guid Id { get; set; }
-        public string Summary { get; set; }
+        public string Summary { get; set; } = "";
         public DateTime StartDate { get; set; }
-        public string Source { get; set; }
+        public string Source { get; set; } = "";
         public Guid UserId { get; set; }
     }
 
     public class Note
     {
         public Guid Id { get; set; }
-        public string Content { get; set; }
+        public string Content { get; set; } = "";
         public DateTime CreatedAt { get; set; }
-        public string Source { get; set; }
+        public string Source { get; set; } = "";
         public Guid UserId { get; set; }
     }
+
 }
