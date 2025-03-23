@@ -16,10 +16,8 @@ var connectionString = builder.Configuration.GetConnectionString("LifeSyncDbCont
     ?? throw new InvalidOperationException("Connection string 'LifeSyncDbContext' not found.");
 
 builder.Services.AddDbContext<LifeSyncDbContext>(options =>
-    options
-        .UseNpgsql(connectionString)
-        .UseSnakeCaseNamingConvention()
-);
+    options.UseNpgsql(connectionString));
+
 
 // 🌐 CORS ayarları
 builder.Services.AddCors(options =>
@@ -50,6 +48,25 @@ app.UseCors("AllowAll");
 app.UseAuthorization();
 
 app.MapRazorPages();
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<LifeSyncDbContext>();
+
+    try
+    {
+        var canConnect = context.Database.CanConnect();
+        Console.WriteLine(canConnect ? "Veritabanı bağlantısı başarılı." : "Veritabanına bağlanılamadı.");
+
+        var taskCount = context.Tasks.Count();
+        Console.WriteLine($"Tasks tablosunda {taskCount} kayıt var.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Veritabanı bağlantı kontrolünde hata: {ex.Message}");
+    }
+}
+
 app.Run();
  
 
