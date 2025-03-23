@@ -1,35 +1,43 @@
-using Microsoft.Extensions.DependencyInjection;
+Ôªøusing Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using backend.models;
-using Npgsql.EntityFrameworkCore.PostgreSQL;
+using Npgsql.EntityFrameworkCore.PostgreSQL; // üî• Burasƒ± kritik
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddControllers();
 builder.Services.AddRazorPages();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
-// PostgreSQL balant˝ ˛emas˝ ekle
-var connectionString = builder.Configuration.GetConnectionString("LifeSyncDbContext") ??
-    throw new InvalidOperationException("Connection string 'LifeSyncDbContext' not found.");
+// üåê PostgreSQL baƒülantƒ±sƒ±
+var connectionString = builder.Configuration.GetConnectionString("LifeSyncDbContext")
+    ?? throw new InvalidOperationException("Connection string 'LifeSyncDbContext' not found.");
+
 builder.Services.AddDbContext<LifeSyncDbContext>(options =>
-    options.UseNpgsql(connectionString).UseSnakeCaseNamingConvention());
+    options
+        .UseNpgsql(connectionString)
+        .UseSnakeCaseNamingConvention()
+);
 
-// CORS ayarlar˝ (OAuth iÁin gerekli olabilir)
+// üåê CORS ayarlarƒ±
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
-        policy =>
-        {
+    options.AddPolicy("AllowAll", policy =>
+    {
         policy.AllowAnyOrigin()
               .AllowAnyMethod()
-              .AllowAnyHeader());
+              .AllowAnyHeader();
+    });
 });
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseSwagger();
+    app.UseSwaggerUI();
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
@@ -38,11 +46,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
 app.UseCors("AllowAll");
-
 app.UseAuthorization();
 
 app.MapRazorPages();
-
 app.Run();
