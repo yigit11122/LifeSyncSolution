@@ -1,35 +1,33 @@
 using Microsoft.Extensions.DependencyInjection;
-using Swashbuckle.AspNetCore.SwaggerGen;
 using Microsoft.EntityFrameworkCore;
 using backend.models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+// Add services to the container.
 builder.Services.AddRazorPages();
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-// PostgreSQL baðlantýsýný ekle
-var connectionString = builder.Configuration.GetConnectionString("PostgreSQLConnection");
+// PostgreSQL baðlantý þemasý ekle
+var connectionString = builder.Configuration.GetConnectionString("LifeSyncDbContext") ??
+    throw new InvalidOperationException("Connection string 'LifeSyncDbContext' not found.");
 builder.Services.AddDbContext<LifeSyncDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseNpgsql(connectionString).UseSnakeCaseNamingConvention());
 
 // CORS ayarlarý (OAuth için gerekli olabilir)
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
-    {
+    options.AddPolicy("AllowAll",
+        policy =>
+        {
         policy.AllowAnyOrigin()
               .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
+              .AllowAnyHeader());
 });
 
 var app = builder.Build();
 
-if (!app.Environment.IsDevelopment())
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
     app.UseHsts();
@@ -39,10 +37,11 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
 app.UseCors("AllowAll");
+
 app.UseAuthorization();
 
-app.MapControllers();
 app.MapRazorPages();
 
 app.Run();

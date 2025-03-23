@@ -1,11 +1,10 @@
-﻿// wwwroot/js/fitbit.js
-const FITBIT_CLIENT_ID = '23Q5HN'; // Fitbit Client ID
+﻿const FITBIT_CLIENT_ID = '23Q5HN';
 const FITBIT_REDIRECT_URI = 'https://localhost:7263/auth/fitbit/callback';
 const FITBIT_SCOPE = 'activity';
 let lastFitbitFetchTime = 0;
-const FETCH_INTERVAL = 60000;
 
 function initiateFitbitOAuth() {
+    console.log('Fitbit OAuth başlatılıyor...');
     const state = Math.random().toString(36).substring(2);
     const authUrl = `/auth/fitbit/connect?state=${state}`;
     window.location.href = authUrl;
@@ -17,8 +16,9 @@ async function fetchFitbitData() {
 
     try {
         const response = await fetch('/Index?handler=FetchData&source=fitbit', { credentials: 'include' });
-        if (!response.ok) throw new Error(`Fitbit veri çekme başarısız: ${response.status}`);
+        if (!response.ok) throw new Error(`Fitbit veri çekme başarısız: ${response.status} - ${await response.text()}`);
         const rawData = await response.json();
+        console.log('Çekilen Fitbit verileri:', rawData);
         const preprocessedData = preprocessTasks(rawData, 'fitbit');
         await saveToBackend(preprocessedData, 'fitbit');
         lastFitbitFetchTime = now;

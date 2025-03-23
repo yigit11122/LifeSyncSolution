@@ -1,4 +1,5 @@
-﻿// wwwroot/js/site.js
+﻿const FETCH_INTERVAL = 60000; 
+
 async function saveToBackend(data, source) {
     try {
         const response = await fetch('/api/sync', {
@@ -7,7 +8,10 @@ async function saveToBackend(data, source) {
             body: JSON.stringify({ source, data }),
             credentials: 'include',
         });
-        if (!response.ok) throw new Error(`Backend kaydetme başarısız: ${response.status}`);
+        if (!response.ok) {
+            throw new Error(`Backend kaydetme başarısız: ${response.status}`);
+        }
+        console.log(`${source} verileri başarıyla backend'e kaydedildi.`);
     } catch (error) {
         console.error('Hata:', error);
     }
@@ -16,8 +20,12 @@ async function saveToBackend(data, source) {
 async function fetchDataFromBackend(source) {
     try {
         const response = await fetch(`/Index?handler=FetchData&source=${source}`, { credentials: 'include' });
-        if (!response.ok) throw new Error(`Backend veri çekme başarısız: ${response.status}`);
-        return await response.json();
+        if (!response.ok) {
+            throw new Error(`Backend veri çekme başarısız: ${response.status} - ${await response.text()}`);
+        }
+        const data = await response.json();
+        console.log(`${source} için çekilen veriler:`, data);
+        return data;
     } catch (error) {
         console.error(`${source} veri çekme hatası:`, error);
         return null;
@@ -25,6 +33,11 @@ async function fetchDataFromBackend(source) {
 }
 
 function preprocessTasks(data, source) {
+    if (!data || !Array.isArray(data)) {
+        console.error(`${source} için geçersiz veri formatı:`, data);
+        return [];
+    }
+
     if (source === 'todoist') {
         return data.map(task => ({
             id: task.id,
@@ -47,19 +60,19 @@ function preprocessTasks(data, source) {
             createdAt: page.createdAt ? new Date(page.createdAt).toISOString() : null,
             source: 'notion',
         }));
-    } else if (source === 'firebase') {
-        return data.map(item => ({
-            id: item.id || crypto.randomUUID(),
-            content: item.content || 'No Content',
-            createdAt: item.createdAt ? new Date(item.createdAt).toISOString() : new Date().toISOString(),
-            source: 'firebase',
-        }));
     } else if (source === 'fitbit') {
         return data.map(activity => ({
             id: activity.id || crypto.randomUUID(),
             content: activity.activityName || 'No Activity',
             createdAt: activity.startTime ? new Date(activity.startTime).toISOString() : new Date().toISOString(),
             source: 'fitbit',
+        }));
+    } else if (source === 'lifesync') {
+        return data.map(item => ({
+            id: item.id || crypto.randomUUID(),
+            content: item.content || 'No Content',
+            createdAt: item.createdAt ? new Date(item.createdAt).toISOString() : new Date().toISOString(),
+            source: 'lifesync',
         }));
     }
     return data;
@@ -79,13 +92,13 @@ function organizeData(data, source) {
         return {
             pages: data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
         };
-    } else if (source === 'firebase') {
-        return {
-            items: data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
-        };
     } else if (source === 'fitbit') {
         return {
             activities: data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
+        };
+    } else if (source === 'lifesync') {
+        return {
+            items: data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
         };
     }
     return data;
@@ -93,35 +106,38 @@ function organizeData(data, source) {
 
 function displayData(data, source) {
     const container = document.getElementById(`${source}-list`);
-    if (!container) return;
+    if (!container) {
+        console.error(`Container '${source}-list' bulunamadı.`);
+        return;
+    }
 
     const organized = organizeData(data, source);
+    container.innerHTML = ''; // Önceki içeriği temizle
     if (source === 'todoist') {
-        container.innerHTML = `
-            <h3>Aktif Görevler</h3>
-            <ul>${organized.activeTasks.map(t => `<li>${t.content}</li>`).join('')}</ul>
-            <h3>Tamamlanan Görevler</h3>
-            <ul>${organized.completedTasks.map(t => `<li>${t.content}</li>`).join('')}</ul>
-        `;
+        if (organized.activeTasks.length > 0) {
+            container.innerHTML += `<h3>Aktif Görevler</h3><ul>${organized.activeTasks.map(t => `<li>${t.content}</li>`).join('')}</ul>`;
+        }
+        if (organized.completedTasks.length > 0) {
+            container.innerHTML += `<h3>Tamamlanan Görevler</h3><ul>${organized.completedTasks.map(t => `<li>${t.content}</li>`).join('')}</ul>`;
+        }
     } else if (source === 'googleCalendar') {
-        container.innerHTML = `
-            <h3>Takvim Etkinlikleri</h3>
-            <ul>${organized.events.map(e => `<li>${e.content}</li>`).join('')}</ul>
-        `;
+        if (organized.events.length > 0) {
+            container.innerHTML += `<h3>Takvim Etkinlikleri</h3><ul>${organized.events.map(e => `<li>${e.content}</li>`).join('')}</ul>`;
+        }
     } else if (source === 'notion') {
-        container.innerHTML = `
-            <h3>Notion Sayfaları</h3>
-            <ul>${organized.pages.map(p => `<li>${p.content}</li>`).join('')}</ul>
-        `;
-    } else if (source === 'firebase') {
-        container.innerHTML = `
-            <h3>LifeSync Öğeleri</h3>
-            <ul>${organized.items.map(i => `<li>${i.content}</li>`).join('')}</ul>
-        `;
+        if (organized.pages.length > 0) {
+            container.innerHTML += `<h3>Notion Sayfaları</h3><ul>${organized.pages.map(p => `<li>${p.content}</li>`).join('')}</ul>`;
+        }
     } else if (source === 'fitbit') {
-        container.innerHTML = `
-            <h3>Fitbit Aktiviteleri</h3>
-            <ul>${organized.activities.map(a => `<li>${a.content}</li>`).join('')}</ul>
-        `;
+        if (organized.activities.length > 0) {
+            container.innerHTML += `<h3>Fitbit Aktiviteleri</h3><ul>${organized.activities.map(a => `<li>${a.content}</li>`).join('')}</ul>`;
+        }
+    } else if (source === 'lifesync') {
+        if (organized.items.length > 0) {
+            container.innerHTML += `<h3>LifeSync Öğeleri</h3><ul>${organized.items.map(i => `<li>${i.content}</li>`).join('')}</ul>`;
+        }
+    } else {
+        container.innerHTML = '<p>Veri türü desteklenmiyor.</p>';
     }
+    console.log(`${source} verileri ekrana basıldı:`, organized);
 }

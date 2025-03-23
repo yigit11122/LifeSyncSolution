@@ -1,28 +1,27 @@
-﻿// wwwroot/js/firebase.js
-let lastFirebaseFetchTime = 0;
-const FETCH_INTERVAL = 60000;
+﻿let lastLifeSyncFetchTime = 0;
 
-async function fetchFirebaseData() {
+async function fetchLifeSyncData() {
     const now = Date.now();
-    if (now - lastFirebaseFetchTime < FETCH_INTERVAL) return;
+    if (now - lastLifeSyncFetchTime < FETCH_INTERVAL) return;
 
     try {
-        const response = await fetch('/Index?handler=FetchData&source=firebase', { credentials: 'include' });
-        if (!response.ok) throw new Error(`Firebase veri çekme başarısız: ${response.status}`);
+        const response = await fetch('/Index?handler=FetchData&source=lifesync', { credentials: 'include' });
+        if (!response.ok) throw new Error(`LifeSync veri çekme başarısız: ${response.status} - ${await response.text()}`);
         const rawData = await response.json();
-        const preprocessedData = preprocessTasks(rawData, 'firebase');
-        await saveToBackend(preprocessedData, 'firebase');
-        lastFirebaseFetchTime = now;
+        console.log('Çekilen LifeSync verileri:', rawData);
+        const preprocessedData = preprocessTasks(rawData, 'lifesync');
+        await saveToBackend(preprocessedData, 'lifesync');
+        lastLifeSyncFetchTime = now;
         return preprocessedData;
     } catch (error) {
-        console.error('Firebase Hata:', error);
+        console.error('LifeSync Hata:', error);
         return null;
     }
 }
 
-function startFirebasePolling() {
+function startLifeSyncPolling() {
     setInterval(async () => {
-        const data = await fetchFirebaseData();
-        if (data) displayData(data, 'firebase');
+        const data = await fetchLifeSyncData();
+        if (data) displayData(data, 'lifesync');
     }, FETCH_INTERVAL);
 }

@@ -15,7 +15,7 @@ namespace LifeSync.Pages
         public IndexModel(ILogger<IndexModel> logger, LifeSyncDbContext context)
         {
             _logger = logger;
-            _context = context;
+            _context = context ?? throw new ArgumentNullException(nameof(context), "LifeSyncDbContext null olamaz.");
         }
 
         public IActionResult OnGet()
@@ -26,42 +26,45 @@ namespace LifeSync.Pages
 
         public async Task<IActionResult> OnGetFetchData(string source)
         {
+            _logger.LogInformation($"Veri çekme isteði alýndý: {source ?? "null"}");
+            if (string.IsNullOrEmpty(source))
+            {
+                _logger.LogWarning("Kaynak parametresi eksik.");
+                return new JsonResult(new { error = "Kaynak parametresi eksik" });
+            }
+
             try
             {
-                if (source == "firebase")
+                List<object> data = new List<object>();
+                switch (source.ToLower())
                 {
-                    // Firebase için backend'den veri çekme iþlemi burada olacak
-                    // Þimdilik Tasks tablosundan örnek veri çekiyoruz
-                    var data = await _context.Tasks.Where(t => t.Source == source).ToListAsync();
-                    return new JsonResult(data);
+                    case "todoist":
+                        data = (await _context.Tasks.Where(t => t.Source == source).ToListAsync()).Cast<object>().ToList();
+                        break;
+                    case "googlecalendar":
+                        data = (await _context.Events.Where(e => e.Source == source).ToListAsync()).Cast<object>().ToList();
+                        break;
+                    case "notion":
+                        data = (await _context.Notes.Where(n => n.Source == source).ToListAsync()).Cast<object>().ToList();
+                        break;
+                    case "fitbit":
+                        data = (await _context.Tasks.Where(t => t.Source == source).ToListAsync()).Cast<object>().ToList();
+                        break;
+                    case "lifesync":
+                        data = (await _context.Tasks.Where(t => t.Source == source).ToListAsync()).Cast<object>().ToList();
+                        break;
+                    default:
+                        _logger.LogWarning($"Geçersiz veri kaynaðý: {source}");
+                        return new JsonResult(new { error = "Geçersiz kaynak" });
                 }
-                else if (source == "todoist")
-                {
-                    var data = await _context.Tasks.Where(t => t.Source == source).ToListAsync();
-                    return new JsonResult(data);
-                }
-                else if (source == "googleCalendar")
-                {
-                    var data = await _context.Events.Where(e => e.Source == source).ToListAsync();
-                    return new JsonResult(data);
-                }
-                else if (source == "notion")
-                {
-                    var data = await _context.Notes.Where(n => n.Source == source).ToListAsync();
-                    return new JsonResult(data);
-                }
-                else if (source == "fitbit")
-                {
-                    // Fitbit aktiviteleri için Tasks veya ayrý bir tablo kullanýlabilir
-                    var data = await _context.Tasks.Where(t => t.Source == source).ToListAsync();
-                    return new JsonResult(data);
-                }
-                return new JsonResult(new { message = "Geçersiz kaynak" });
+
+                _logger.LogInformation($"{source} verileri çekildi: {data.Count} kayýt.");
+                return new JsonResult(data);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Veri çekme hatasý: {source}");
-                return StatusCode(500, "Veri çekme hatasý");
+                return StatusCode(500, new { error = $"Veri çekme hatasý: {ex.Message}" });
             }
         }
     }

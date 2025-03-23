@@ -3,6 +3,10 @@ body {
     margin: 20px;
 }
 
+.integration-section {
+    margin-bottom: 20px;
+}
+
 button {
     padding: 10px 20px;
     margin: 10px 0;
@@ -10,18 +14,20 @@ button {
     color: white;
     border: none;
     cursor: pointer;
+    pointer-events: auto; /* Týklanabilirliði garanti et */
 }
 
     button:hover {
         background-color: #0056b3;
     }
 
+    button:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+    }
+
 h1, h2, h3 {
     color: #333;
-}
-
-div {
-    margin-bottom: 20px;
 }
 
 ul {

@@ -15,42 +15,36 @@
 <body>
     <h1>LifeSync Dashboard</h1>
 
-    <!-- Todoist Bölümü -->
     <div class="integration-section">
         <h2>Todoist Görevlerim</h2>
         <button id="connect-todoist">Connect with Todoist</button>
         <div id="todoist-list"></div>
     </div>
 
-    <!-- Google Calendar Bölümü -->
     <div class="integration-section">
         <h2>Google Takvim Etkinliklerim</h2>
         <button id="connect-google">Connect with Google Calendar</button>
         <div id="googleCalendar-list"></div>
     </div>
 
-    <!-- Notion Bölümü -->
     <div class="integration-section">
         <h2>Notion Sayfalarım</h2>
         <button id="connect-notion">Connect with Notion</button>
         <div id="notion-list"></div>
     </div>
 
-    <!-- Fitbit Bölümü -->
     <div class="integration-section">
         <h2>Fitbit Aktivitelerim</h2>
         <button id="connect-fitbit">Connect with Fitbit</button>
         <div id="fitbit-list"></div>
     </div>
 
-    <!-- LifeSync Kendi Verileri (PostgreSQL) -->
     <div class="integration-section">
         <h2>LifeSync Verilerim</h2>
         <button id="fetch-lifesync">Fetch LifeSync Data</button>
         <div id="lifesync-list"></div>
     </div>
 
-    <!-- JavaScript Dosyalarını Dahil Et -->
     <script src="/js/site.js"></script>
     <script src="/js/todoist.js"></script>
     <script src="/js/googleCalendar.js"></script>
@@ -59,53 +53,50 @@
     <script src="/js/lifesync.js"></script>
 
     <script>
-        // Butonlara tıklama olaylarını ekle
-        const connectTodoistBtn = document.getElementById('connect-todoist');
-        const connectGoogleBtn = document.getElementById('connect-google');
-        const connectNotionBtn = document.getElementById('connect-notion');
-        const connectFitbitBtn = document.getElementById('connect-fitbit');
-        const fetchLifeSyncBtn = document.getElementById('fetch-lifesync');
+        // Butonlara tıklama olaylarını ekle ve hata kontrolü yap
+        const buttons = [
+            { id: 'connect-todoist', func: 'initiateTodoistOAuth' },
+            { id: 'connect-google', func: 'initiateGoogleCalendarOAuth' },
+            { id: 'connect-notion', func: 'initiateNotionOAuth' },
+            { id: 'connect-fitbit', func: 'initiateFitbitOAuth' },
+            { id: 'fetch-lifesync', func: 'startLifeSyncPolling' }
+        ];
 
-        if (connectTodoistBtn && typeof initiateTodoistOAuth === 'function') {
-            connectTodoistBtn.addEventListener('click', initiateTodoistOAuth);
-        } else {
-            console.error('Todoist OAuth fonksiyonu tanımlı değil veya buton bulunamadı.');
-        }
-
-        if (connectGoogleBtn && typeof initiateGoogleCalendarOAuth === 'function') {
-            connectGoogleBtn.addEventListener('click', initiateGoogleCalendarOAuth);
-        } else {
-            console.error('Google Calendar OAuth fonksiyonu tanımlı değil veya buton bulunamadı.');
-        }
-
-        if (connectNotionBtn && typeof initiateNotionOAuth === 'function') {
-            connectNotionBtn.addEventListener('click', initiateNotionOAuth);
-        } else {
-            console.error('Notion OAuth fonksiyonu tanımlı değil veya buton bulunamadı.');
-        }
-
-        if (connectFitbitBtn && typeof initiateFitbitOAuth === 'function') {
-            connectFitbitBtn.addEventListener('click', initiateFitbitOAuth);
-        } else {
-            console.error('Fitbit OAuth fonksiyonu tanımlı değil veya buton bulunamadı.');
-        }
-
-        if (fetchLifeSyncBtn && typeof startLifeSyncPolling === 'function') {
-            fetchLifeSyncBtn.addEventListener('click', startLifeSyncPolling);
-        } else {
-            console.error('LifeSync veri çekme fonksiyonu tanımlı değil veya buton bulunamadı.');
-        }
+        buttons.forEach(btn => {
+            const button = document.getElementById(btn.id);
+            if (button) {
+                button.addEventListener('click', () => {
+                    if (typeof window[btn.func] === 'function') {
+                        window[btn.func]();
+                        console.log(`${btn.id} butonu tıklandı, ${btn.func} fonksiyonu çalıştırıldı.`);
+                    } else {
+                        console.error(`${btn.id} butonu için ${btn.func} fonksiyonu tanımlı değil.`);
+                    }
+                });
+                console.log(`${btn.id} butonu tıklanabilir hale getirildi.`);
+            } else {
+                console.error(`${btn.id} butonu bulunamadı.`);
+            }
+        });
 
         // Sayfa yüklendiğinde verileri çek
         window.onload = async () => {
             try {
                 const sources = ['todoist', 'googleCalendar', 'notion', 'fitbit', 'lifesync'];
                 for (const source of sources) {
+                    console.log(`${source} için veri çekme denemesi yapılıyor...`);
                     const data = await fetchDataFromBackend(source);
-                    if (data) displayData(data, source);
+                    if (data && Array.isArray(data) && data.length > 0) {
+                        displayData(data, source);
+                        console.log(`${source} verileri başarıyla çekildi ve görüntülendi.`);
+                    } else if (data) {
+                        console.log(`${source} için veri boş veya geçersiz:`, data);
+                    } else {
+                        console.log(`${source} için veri çekilemedi.`);
+                    }
                 }
             } catch (error) {
-                console.error('Veri çekme hatası:', error);
+                console.error('Genel veri çekme hatası:', error);
             }
         };
     </script>
