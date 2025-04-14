@@ -65,6 +65,7 @@ namespace LifeSync.Controllers
                 foreach (var item in request.Data)
                 {
                     Console.WriteLine($"Veri işleniyor: Id = {item.Id}, Content = {item.Content}, CreatedAt = {item.CreatedAt}");
+
                     switch (request.Source.ToLower())
                     {
                         case "todoist":
@@ -78,6 +79,7 @@ namespace LifeSync.Controllers
                                 UserId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48")
                             });
                             break;
+
                         case "googlecalendar":
                             _context.Events.Add(new Event
                             {
@@ -88,18 +90,30 @@ namespace LifeSync.Controllers
                                 UserId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48")
                             });
                             break;
+
                         case "notion":
-                            // CreatedAt değerini UTC formatına çeviriyoruz
+                            var noteId = Guid.Parse(item.Id);
+
+                            // 🧽 Daha önce varsa sil
+                            var existingNote = await _context.Notes.FindAsync(noteId);
+                            if (existingNote != null)
+                            {
+                                _context.Notes.Remove(existingNote);
+                                await _context.SaveChangesAsync(); // Hemen sil
+                            }
+
+                            // ➕ Yeni veriyi ekle
                             var createdAt = DateTime.Parse(item.CreatedAt).ToUniversalTime();
                             _context.Notes.Add(new Note
                             {
-                                Id = Guid.Parse(item.Id),
+                                Id = noteId,
                                 Content = item.Content,
                                 CreatedAt = createdAt,
                                 Source = "notion",
                                 UserId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48")
                             });
                             break;
+
                         case "fitbit":
                         case "lifesync":
                             _context.Tasks.Add(new TaskItem
@@ -111,11 +125,13 @@ namespace LifeSync.Controllers
                                 UserId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48")
                             });
                             break;
+
                         default:
                             Console.WriteLine($"Hata: Geçersiz kaynak: {request.Source}");
                             return BadRequest("Geçersiz kaynak: " + request.Source);
                     }
                 }
+
                 await _context.SaveChangesAsync();
                 Console.WriteLine("Veri başarıyla kaydedildi.");
                 return Ok(new { message = "Veri başarıyla kaydedildi." });
