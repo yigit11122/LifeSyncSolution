@@ -1,19 +1,37 @@
-﻿const FETCH_INTERVAL = 60000; 
+﻿// FETCH_INTERVAL artık global olarak tanımlı, burada tanımlamıyoruz
 
-async function saveToBackend(data, source) {
+async function saveToBackend(pages, source) {
     try {
+        const requestBody = {
+            Source: source,
+            Data: pages.map(page => ({
+                Id: page.id,
+                Content: page.content,
+                CreatedAt: page.createdAt,
+                DueDate: null,
+                StartDate: null,
+                Completed: false
+            }))
+        };
+
         const response = await fetch('/api/sync', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ source, data }),
-            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody)
         });
+
         if (!response.ok) {
-            throw new Error(`Backend kaydetme başarısız: ${response.status}`);
+            const errorText = await response.text();
+            console.error(`Veri kaydetme başarısız: ${response.status} - ${errorText}`);
+            throw new Error(errorText);
         }
-        console.log(`${source} verileri başarıyla backend'e kaydedildi.`);
+
+        const result = await response.json();
+        console.log('Veri kaydetme sonucu:', result);
     } catch (error) {
-        console.error('Hata:', error);
+        console.error('Veri kaydetme hatası:', error.message);
     }
 }
 
@@ -53,13 +71,6 @@ function preprocessTasks(data, source) {
             startDate: event.startDate ? new Date(event.startDate).toISOString() : null,
             source: 'googleCalendar',
         }));
-    } else if (source === 'notion') {
-        return data.map(page => ({
-            id: page.id,
-            content: page.content || 'No Title',
-            createdAt: page.createdAt ? new Date(page.createdAt).toISOString() : null,
-            source: 'notion',
-        }));
     } else if (source === 'fitbit') {
         return data.map(activity => ({
             id: activity.id || crypto.randomUUID(),
@@ -88,10 +99,6 @@ function organizeData(data, source) {
         return {
             events: data.sort((a, b) => new Date(a.startDate) - new Date(b.startDate)),
         };
-    } else if (source === 'notion') {
-        return {
-            pages: data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
-        };
     } else if (source === 'fitbit') {
         return {
             activities: data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
@@ -99,6 +106,10 @@ function organizeData(data, source) {
     } else if (source === 'lifesync') {
         return {
             items: data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
+        };
+    } else if (source === 'notion') {
+        return {
+            pages: data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
         };
     }
     return data;
@@ -112,7 +123,7 @@ function displayData(data, source) {
     }
 
     const organized = organizeData(data, source);
-    container.innerHTML = ''; // Önceki içeriği temizle
+    container.innerHTML = '';
     if (source === 'todoist') {
         if (organized.activeTasks.length > 0) {
             container.innerHTML += `<h3>Aktif Görevler</h3><ul>${organized.activeTasks.map(t => `<li>${t.content}</li>`).join('')}</ul>`;
@@ -125,7 +136,7 @@ function displayData(data, source) {
             container.innerHTML += `<h3>Takvim Etkinlikleri</h3><ul>${organized.events.map(e => `<li>${e.content}</li>`).join('')}</ul>`;
         }
     } else if (source === 'notion') {
-        if (organized.pages.length > 0) {
+        if (organized.pages && organized.pages.length > 0) {
             container.innerHTML += `<h3>Notion Sayfaları</h3><ul>${organized.pages.map(p => `<li>${p.content}</li>`).join('')}</ul>`;
         }
     } else if (source === 'fitbit') {

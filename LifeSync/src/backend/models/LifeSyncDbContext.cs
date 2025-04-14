@@ -9,6 +9,8 @@ namespace backend.models
         public DbSet<TaskItem> Tasks { get; set; }
         public DbSet<Event> Events { get; set; }
         public DbSet<Note> Notes { get; set; }
+        // Düzeltme: OAuthTokens DbSet'i eklendi
+        public DbSet<OAuthToken> OAuthTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -25,6 +27,12 @@ namespace backend.models
             modelBuilder.Entity<Note>(entity =>
             {
                 entity.ToTable("Notes", "public");
+            });
+
+            // Düzeltme: OAuthTokens tablosu için yapılandırma eklendi
+            modelBuilder.Entity<OAuthToken>(entity =>
+            {
+                entity.ToTable("OAuthTokens", "public");
             });
         }
     }
@@ -54,6 +62,17 @@ namespace backend.models
         public string Content { get; set; } = "";
         public DateTime CreatedAt { get; set; }
         public string Source { get; set; } = "";
+        public Guid UserId { get; set; }
+    }
+
+    // Düzeltme: OAuthToken modeli eklendi
+    public class OAuthToken
+    {
+        public Guid Id { get; set; }
+        public string? Source { get; set; } // Düzeltme: null olabilir
+        public string? AccessToken { get; set; } // Düzeltme: null olabilir
+        public string? RefreshToken { get; set; } // Düzeltme: null olabilir
+        public DateTime ExpiryDate { get; set; }
         public Guid UserId { get; set; }
     }
 }

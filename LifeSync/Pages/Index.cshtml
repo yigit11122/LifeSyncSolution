@@ -1,7 +1,7 @@
 ﻿@page
 @model LifeSync.Pages.IndexModel
 @{
-    ViewData["Title"] = "LifeSync Dashboard";
+    ViewData["Title"] = "LifeSync";
 }
 
 <!DOCTYPE html>
@@ -9,96 +9,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LifeSync Dashboard</title>
-    <link rel="stylesheet" href="/css/site.css">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="/css/site.css" />
 </head>
 <body>
-    <h1>LifeSync Dashboard</h1>
+    <div class="container">
+        <h1>LifeSync</h1>
 
-    <div class="integration-section">
-        <h2>Todoist Görevlerim</h2>
-        <button id="connect-todoist">Connect with Todoist</button>
-        <div id="todoist-list"></div>
+        <div>
+            <h2>Todoist</h2>
+            <button id="connect-todoist">Connect with Todoist</button>
+            <div id="todoist-list"></div>
+        </div>
+
+        <div>
+            <h2>Google Calendar</h2>
+            <button id="connect-google">Connect with Google Calendar</button>
+            <div id="googleCalendar-list"></div>
+        </div>
+
+        <div>
+            <h2>Notion</h2>
+            <button id="connect-notion">Connect with Notion</button>
+            <div id="notion-list"></div>
+        </div>
+
+        <div>
+            <h2>Fitbit</h2>
+            <button id="connect-fitbit">Connect with Fitbit</button>
+            <div id="fitbit-list"></div>
+        </div>
+
+        <div>
+            <h2>LifeSync</h2>
+            <button id="fetch-lifesync">Fetch LifeSync Data</button>
+            <div id="lifesync-list"></div>
+        </div>
     </div>
 
-    <div class="integration-section">
-        <h2>Google Takvim Etkinliklerim</h2>
-        <button id="connect-google">Connect with Google Calendar</button>
-        <div id="googleCalendar-list"></div>
-    </div>
+    @section Scripts {
+        <script>
+            // Global FETCH_INTERVAL tanımı
+            window.FETCH_INTERVAL = 60000;
+        </script>
+        <script src="/js/site.js"></script>
+        <script src="/js/notion.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                console.log('connect-todoist butonu tıklanabilir hale getirildi.');
+                console.log('connect-google butonu tıklanabilir hale getirildi.');
+                console.log('connect-notion butonu tıklanabilir hale getirildi.');
+                console.log('connect-fitbit butonu tıklanabilir hale getirildi.');
+                console.log('fetch-lifesync butonu tıklanabilir hale getirildi.');
 
-    <div class="integration-section">
-        <h2>Notion Sayfalarım</h2>
-        <button id="connect-notion">Connect with Notion</button>
-        <div id="notion-list"></div>
-    </div>
-
-    <div class="integration-section">
-        <h2>Fitbit Aktivitelerim</h2>
-        <button id="connect-fitbit">Connect with Fitbit</button>
-        <div id="fitbit-list"></div>
-    </div>
-
-    <div class="integration-section">
-        <h2>LifeSync Verilerim</h2>
-        <button id="fetch-lifesync">Fetch LifeSync Data</button>
-        <div id="lifesync-list"></div>
-    </div>
-
-    <script src="/js/site.js"></script>
-    <script src="/js/todoist.js"></script>
-    <script src="/js/googleCalendar.js"></script>
-    <script src="/js/notion.js"></script>
-    <script src="/js/fitbit.js"></script>
-    <script src="/js/lifesync.js"></script>
-
-    <script>
-        // Butonlara tıklama olaylarını ekle ve hata kontrolü yap
-        const buttons = [
-            { id: 'connect-todoist', func: 'initiateTodoistOAuth' },
-            { id: 'connect-google', func: 'initiateGoogleCalendarOAuth' },
-            { id: 'connect-notion', func: 'initiateNotionOAuth' },
-            { id: 'connect-fitbit', func: 'initiateFitbitOAuth' },
-            { id: 'fetch-lifesync', func: 'startLifeSyncPolling' }
-        ];
-
-        buttons.forEach(btn => {
-            const button = document.getElementById(btn.id);
-            if (button) {
-                button.addEventListener('click', () => {
-                    if (typeof window[btn.func] === 'function') {
-                        window[btn.func]();
-                        console.log(`${btn.id} butonu tıklandı, ${btn.func} fonksiyonu çalıştırıldı.`);
-                    } else {
-                        console.error(`${btn.id} butonu için ${btn.func} fonksiyonu tanımlı değil.`);
-                    }
-                });
-                console.log(`${btn.id} butonu tıklanabilir hale getirildi.`);
-            } else {
-                console.error(`${btn.id} butonu bulunamadı.`);
-            }
-        });
-
-        // Sayfa yüklendiğinde verileri çek
-        window.onload = async () => {
-            try {
-                const sources = ['todoist', 'googleCalendar', 'notion', 'fitbit', 'lifesync'];
-                for (const source of sources) {
-                    console.log(`${source} için veri çekme denemesi yapılıyor...`);
-                    const data = await fetchDataFromBackend(source);
-                    if (data && Array.isArray(data) && data.length > 0) {
-                        displayData(data, source);
-                        console.log(`${source} verileri başarıyla çekildi ve görüntülendi.`);
-                    } else if (data) {
-                        console.log(`${source} için veri boş veya geçersiz:`, data);
-                    } else {
-                        console.log(`${source} için veri çekilemedi.`);
-                    }
+                // Notion verilerini çekme işlemi
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('source') === 'notion' && urlParams.get('code')) {
+                    console.log('Notion yetkilendirme sonrası veri çekme işlemi başlatılıyor...');
+                    fetchNotionPages().then(pages => {
+                        if (pages) {
+                            displayData(pages, 'notion');
+                        }
+                    });
                 }
-            } catch (error) {
-                console.error('Genel veri çekme hatası:', error);
-            }
-        };
-    </script>
+
+                // Diğer kaynaklar için veri çekme
+                const sources = ['todoist', 'googleCalendar', 'notion', 'fitbit', 'lifesync'];
+                sources.forEach(source => {
+                    console.log(`${source} için veri çekme denemesi yapılıyor...`);
+                    fetchDataFromBackend(source).then(data => {
+                        if (data && data.length > 0) {
+                            console.log(`${source} verileri başarıyla çekildi ve görüntülendi.`);
+                            displayData(data, source);
+                        } else {
+                            console.log(`${source} için veri boş veya geçersiz:`, data);
+                        }
+                    });
+                });
+            });
+        </script>
+    }
 </body>
 </html>

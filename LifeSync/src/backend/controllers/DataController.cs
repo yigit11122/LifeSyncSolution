@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using backend.models;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Net.Http;
 
 namespace LifeSync.Controllers
 {
@@ -54,8 +55,16 @@ namespace LifeSync.Controllers
         {
             try
             {
+                if (request == null || request.Data == null || !request.Data.Any())
+                {
+                    Console.WriteLine("Hata: Geçersiz veri: Veri listesi boş veya null.");
+                    return BadRequest("Geçersiz veri: Veri listesi boş veya null.");
+                }
+
+                Console.WriteLine($"Sync isteği alındı: Source = {request.Source}, Veri sayısı = {request.Data.Count}");
                 foreach (var item in request.Data)
                 {
+                    Console.WriteLine($"Veri işleniyor: Id = {item.Id}, Content = {item.Content}, CreatedAt = {item.CreatedAt}");
                     switch (request.Source.ToLower())
                     {
                         case "todoist":
@@ -65,7 +74,8 @@ namespace LifeSync.Controllers
                                 Content = item.Content,
                                 DueDate = item.DueDate != null ? DateTime.Parse(item.DueDate) : null,
                                 Completed = item.Completed,
-                                Source = "todoist"
+                                Source = "todoist",
+                                UserId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48")
                             });
                             break;
                         case "googlecalendar":
@@ -73,17 +83,21 @@ namespace LifeSync.Controllers
                             {
                                 Id = Guid.Parse(item.Id),
                                 Summary = item.Content,
-                                StartDate = DateTime.Parse(item.StartDate),
-                                Source = "googleCalendar"
+                                StartDate = item.StartDate != null ? DateTime.Parse(item.StartDate) : DateTime.UtcNow,
+                                Source = "googleCalendar",
+                                UserId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48")
                             });
                             break;
                         case "notion":
+                            // CreatedAt değerini UTC formatına çeviriyoruz
+                            var createdAt = DateTime.Parse(item.CreatedAt).ToUniversalTime();
                             _context.Notes.Add(new Note
                             {
                                 Id = Guid.Parse(item.Id),
                                 Content = item.Content,
-                                CreatedAt = DateTime.Parse(item.CreatedAt),
-                                Source = "notion"
+                                CreatedAt = createdAt,
+                                Source = "notion",
+                                UserId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48")
                             });
                             break;
                         case "fitbit":
@@ -92,18 +106,97 @@ namespace LifeSync.Controllers
                             {
                                 Id = Guid.Parse(item.Id),
                                 Content = item.Content,
-                                DueDate = item.CreatedAt != null ? DateTime.Parse(item.CreatedAt) : null,
-                                Source = request.Source
+                                DueDate = item.CreatedAt != null ? DateTime.Parse(item.CreatedAt).ToUniversalTime() : null,
+                                Source = request.Source,
+                                UserId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48")
                             });
                             break;
+                        default:
+                            Console.WriteLine($"Hata: Geçersiz kaynak: {request.Source}");
+                            return BadRequest("Geçersiz kaynak: " + request.Source);
                     }
                 }
                 await _context.SaveChangesAsync();
-                return Ok(new { message = "Veri kaydedildi" });
+                Console.WriteLine("Veri başarıyla kaydedildi.");
+                return Ok(new { message = "Veri başarıyla kaydedildi." });
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Veri kaydetme hatası: {ex.Message}");
                 return StatusCode(500, $"Veri kaydetme hatası: {ex.Message}");
+            }
+        }
+
+        [HttpGet("get-notes")]
+        public async Task<IActionResult> GetNotes(string source)
+        {
+            try
+            {
+                var notes = await _context.Notes
+                    .Where(n => n.Source.ToLower() == source.ToLower())
+                    .Select(n => new
+                    {
+                        id = n.Id,
+                        content = n.Content,
+                        createdAt = n.CreatedAt,
+                        source = n.Source
+                    })
+                    .ToListAsync();
+
+                return Ok(notes);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = $"Notlar çekilirken hata oluştu: {ex.Message}" });
+            }
+        }
+
+        [HttpGet("fetch-notion-data")]
+        public async Task<IActionResult> FetchNotionData()
+        {
+            try
+            {
+                Console.WriteLine("Notion veri çekme isteği alındı.");
+                string accessToken;
+                using (var scope = HttpContext.RequestServices.CreateScope())
+                {
+                    var context = scope.ServiceProvider.GetRequiredService<LifeSyncDbContext>();
+                    accessToken = await context.OAuthTokens
+                        .Where(t => t.Source.ToLower() == "notion")
+                        .OrderByDescending(t => t.ExpiryDate)
+                        .Select(t => t.AccessToken)
+                        .FirstOrDefaultAsync();
+
+                    if (string.IsNullOrEmpty(accessToken))
+                    {
+                        Console.WriteLine("Hata: Token alınmadı.");
+                        return new JsonResult(new { error = "Token alınmadı" });
+                    }
+                }
+
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+                client.DefaultRequestHeaders.Add("Notion-Version", "2022-06-28");
+
+                string databaseId = "1c0b360d762580278f1cc03200fed541";
+                Console.WriteLine($"Notion API isteği gönderiliyor: DatabaseId = {databaseId}");
+                var notionResponse = await client.PostAsync($"https://api.notion.com/v1/databases/{databaseId}/query", null);
+
+                if (!notionResponse.IsSuccessStatusCode)
+                {
+                    var error = await notionResponse.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Notion veri çekme hatası: {error}");
+                    return new JsonResult(new { error = $"Notion veri çekme hatası: {error}" });
+                }
+
+                var notionData = await notionResponse.Content.ReadAsStringAsync();
+                Console.WriteLine("Notion verileri başarıyla çekildi.");
+                return new JsonResult(new { data = notionData });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Veri çekme hatası: {ex.Message}");
+                return new JsonResult(new { error = $"Veri çekme hatası: {ex.Message}" });
             }
         }
     }
@@ -118,8 +211,8 @@ namespace LifeSync.Controllers
     {
         public string Id { get; set; }
         public string Content { get; set; }
-        public string DueDate { get; set; }
-        public string StartDate { get; set; }
+        public string? DueDate { get; set; }
+        public string? StartDate { get; set; }
         public string CreatedAt { get; set; }
         public bool Completed { get; set; }
     }

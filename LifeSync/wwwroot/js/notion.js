@@ -1,7 +1,4 @@
-﻿const NOTION_CLIENT_ID = '1b9d872b-594c-807f-bf84-0037fed59b9c';
-const NOTION_REDIRECT_URI = 'https://localhost:7263/auth/notion/callback';
-const NOTION_SCOPE = 'read';
-let lastNotionFetchTime = 0;
+﻿let lastNotionFetchTime = 0;
 
 function initiateNotionOAuth() {
     console.log('Notion OAuth başlatılıyor...');
@@ -12,26 +9,59 @@ function initiateNotionOAuth() {
 
 async function fetchNotionPages() {
     const now = Date.now();
-    if (now - lastNotionFetchTime < FETCH_INTERVAL) return;
+    if (now - lastNotionFetchTime < window.FETCH_INTERVAL) {
+        console.log('Notion veri çekme için bekleme süresi: FETCH_INTERVAL');
+        return;
+    }
 
     try {
-        const response = await fetch('/Index?handler=FetchData&source=notion', { credentials: 'include' });
-        if (!response.ok) throw new Error(`Notion veri çekme başarısız: ${response.status} - ${await response.text()}`);
+        console.log('Notion veri çekme isteği gönderiliyor...');
+        const response = await fetch('/api/fetch-notion-data', { credentials: 'include' });
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Notion veri çekme başarısız: ${response.status} - ${errorText}`);
+            throw new Error(errorText);
+        }
         const rawPages = await response.json();
         console.log('Çekilen Notion verileri:', rawPages);
-        const preprocessedPages = preprocessTasks(rawPages, 'notion');
+        if (rawPages.error) {
+            throw new Error(rawPages.error);
+        }
+        const preprocessedPages = preprocessNotionPages(rawPages.data);
+        console.log('Notion verileri işlendikten sonra:', preprocessedPages);
+        if (preprocessedPages.length === 0) {
+            console.log('Notion verileri boş, kaydetme işlemi yapılmayacak.');
+            return;
+        }
         await saveToBackend(preprocessedPages, 'notion');
         lastNotionFetchTime = now;
         return preprocessedPages;
     } catch (error) {
-        console.error('Notion Hata:', error);
+        console.error('Notion Hata:', error.message);
+        document.getElementById("notion-list").innerHTML = `Hata: ${error.message}`;
         return null;
     }
 }
 
-function startNotionPolling() {
-    setInterval(async () => {
-        const pages = await fetchNotionPages();
-        if (pages) displayData(pages, 'notion');
-    }, FETCH_INTERVAL);
+function preprocessNotionPages(data) {
+    const parsedData = JSON.parse(data);
+    const pages = parsedData.results || [];
+    const processedPages = pages.map(page => {
+        let title = "Başlık Yok";
+        if (page.properties && page.properties.Name && page.properties.Name.title && page.properties.Name.title.length > 0) {
+            title = page.properties.Name.title[0].text.content;
+        }
+        const createdAt = page.created_time || new Date().toISOString();
+        const id = page.id ? page.id.replace(/-/g, '') : crypto.randomUUID();
+        return {
+            id: id,
+            content: title,
+            createdAt: createdAt,
+            source: 'notion'
+        };
+    });
+    console.log('İşlenmiş Notion verileri:', processedPages);
+    return processedPages;
 }
+
+document.getElementById("connect-notion").addEventListener("click", initiateNotionOAuth);
