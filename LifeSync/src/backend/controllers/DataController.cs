@@ -26,20 +26,14 @@ namespace LifeSync.Controllers
                 switch (source.ToLower())
                 {
                     case "todoist":
-                        var todoistData = await _context.Tasks.Where(t => t.Source == source).ToListAsync();
-                        return Ok(todoistData);
+                        return Ok(await _context.Tasks.Where(t => t.Source == source).ToListAsync());
                     case "googlecalendar":
-                        var googleData = await _context.Events.Where(e => e.Source == source).ToListAsync();
-                        return Ok(googleData);
+                        return Ok(await _context.Events.Where(e => e.Source == source).ToListAsync());
                     case "notion":
-                        var notionData = await _context.Notes.Where(n => n.Source == source).ToListAsync();
-                        return Ok(notionData);
+                        return Ok(await _context.Notes.Where(n => n.Source == source).ToListAsync());
                     case "fitbit":
-                        var fitbitData = await _context.Tasks.Where(t => t.Source == source).ToListAsync();
-                        return Ok(fitbitData);
                     case "lifesync":
-                        var lifesyncData = await _context.Tasks.Where(t => t.Source == source).ToListAsync();
-                        return Ok(lifesyncData);
+                        return Ok(await _context.Tasks.Where(t => t.Source == source).ToListAsync());
                     default:
                         return NotFound("Geçersiz kaynak");
                 }
@@ -55,16 +49,28 @@ namespace LifeSync.Controllers
         {
             try
             {
-                if (request == null || request.Data == null || !request.Data.Any())
-                {
-                    Console.WriteLine("Hata: Geçersiz veri: Veri listesi boş veya null.");
+                if (request?.Data == null || !request.Data.Any())
                     return BadRequest("Geçersiz veri: Veri listesi boş veya null.");
-                }
 
                 Console.WriteLine($"Sync isteği alındı: Source = {request.Source}, Veri sayısı = {request.Data.Count}");
+
                 foreach (var item in request.Data)
                 {
                     Console.WriteLine($"Veri işleniyor: Id = {item.Id}, Content = {item.Content}, CreatedAt = {item.CreatedAt}");
+
+                    Guid userId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48"); // default
+
+                    if (request.Source.ToLower() == "notion")
+                    {
+                        var tokenUserId = await _context.OAuthTokens
+                            .Where(t => t.Source.ToLower() == "notion")
+                            .OrderByDescending(t => t.ExpiryDate)
+                            .Select(t => t.UserId)
+                            .FirstOrDefaultAsync();
+
+                        if (tokenUserId != Guid.Empty)
+                            userId = tokenUserId;
+                    }
 
                     switch (request.Source.ToLower())
                     {
@@ -73,10 +79,10 @@ namespace LifeSync.Controllers
                             {
                                 Id = Guid.Parse(item.Id),
                                 Content = item.Content,
-                                DueDate = item.DueDate != null ? DateTime.Parse(item.DueDate) : null,
+                                DueDate = string.IsNullOrEmpty(item.DueDate) ? null : DateTime.Parse(item.DueDate),
                                 Completed = item.Completed,
                                 Source = "todoist",
-                                UserId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48")
+                                UserId = userId
                             });
                             break;
 
@@ -85,32 +91,30 @@ namespace LifeSync.Controllers
                             {
                                 Id = Guid.Parse(item.Id),
                                 Summary = item.Content,
-                                StartDate = item.StartDate != null ? DateTime.Parse(item.StartDate) : DateTime.UtcNow,
+                                StartDate = string.IsNullOrEmpty(item.StartDate) ? DateTime.UtcNow : DateTime.Parse(item.StartDate),
                                 Source = "googleCalendar",
-                                UserId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48")
+                                UserId = userId
                             });
                             break;
 
                         case "notion":
                             var noteId = Guid.Parse(item.Id);
 
-                            // 🧽 Daha önce varsa sil
-                            var existingNote = await _context.Notes.FindAsync(noteId);
-                            if (existingNote != null)
+                            // 🔄 Varsa eski kaydı sil
+                            var existing = await _context.Notes.FindAsync(noteId);
+                            if (existing != null)
                             {
-                                _context.Notes.Remove(existingNote);
-                                await _context.SaveChangesAsync(); // Hemen sil
+                                _context.Notes.Remove(existing);
+                                await _context.SaveChangesAsync();
                             }
 
-                            // ➕ Yeni veriyi ekle
-                            var createdAt = DateTime.Parse(item.CreatedAt).ToUniversalTime();
                             _context.Notes.Add(new Note
                             {
                                 Id = noteId,
                                 Content = item.Content,
-                                CreatedAt = createdAt,
+                                CreatedAt = DateTime.Parse(item.CreatedAt).ToUniversalTime(),
                                 Source = "notion",
-                                UserId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48")
+                                UserId = userId
                             });
                             break;
 
@@ -120,25 +124,22 @@ namespace LifeSync.Controllers
                             {
                                 Id = Guid.Parse(item.Id),
                                 Content = item.Content,
-                                DueDate = item.CreatedAt != null ? DateTime.Parse(item.CreatedAt).ToUniversalTime() : null,
+                                DueDate = string.IsNullOrEmpty(item.CreatedAt) ? null : DateTime.Parse(item.CreatedAt).ToUniversalTime(),
                                 Source = request.Source,
-                                UserId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48")
+                                UserId = userId
                             });
                             break;
 
                         default:
-                            Console.WriteLine($"Hata: Geçersiz kaynak: {request.Source}");
                             return BadRequest("Geçersiz kaynak: " + request.Source);
                     }
                 }
 
                 await _context.SaveChangesAsync();
-                Console.WriteLine("Veri başarıyla kaydedildi.");
                 return Ok(new { message = "Veri başarıyla kaydedildi." });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Veri kaydetme hatası: {ex.Message}");
                 return StatusCode(500, $"Veri kaydetme hatası: {ex.Message}");
             }
         }
@@ -150,13 +151,7 @@ namespace LifeSync.Controllers
             {
                 var notes = await _context.Notes
                     .Where(n => n.Source.ToLower() == source.ToLower())
-                    .Select(n => new
-                    {
-                        id = n.Id,
-                        content = n.Content,
-                        createdAt = n.CreatedAt,
-                        source = n.Source
-                    })
+                    .Select(n => new { n.Id, n.Content, n.CreatedAt, n.Source })
                     .ToListAsync();
 
                 return Ok(notes);
@@ -174,6 +169,7 @@ namespace LifeSync.Controllers
             {
                 Console.WriteLine("Notion veri çekme isteği alındı.");
                 string accessToken;
+
                 using (var scope = HttpContext.RequestServices.CreateScope())
                 {
                     var context = scope.ServiceProvider.GetRequiredService<LifeSyncDbContext>();
@@ -184,10 +180,7 @@ namespace LifeSync.Controllers
                         .FirstOrDefaultAsync();
 
                     if (string.IsNullOrEmpty(accessToken))
-                    {
-                        Console.WriteLine("Hata: Token alınmadı.");
                         return new JsonResult(new { error = "Token alınmadı" });
-                    }
                 }
 
                 using var client = new HttpClient();
@@ -195,23 +188,19 @@ namespace LifeSync.Controllers
                 client.DefaultRequestHeaders.Add("Notion-Version", "2022-06-28");
 
                 string databaseId = "1c0b360d762580278f1cc03200fed541";
-                Console.WriteLine($"Notion API isteği gönderiliyor: DatabaseId = {databaseId}");
                 var notionResponse = await client.PostAsync($"https://api.notion.com/v1/databases/{databaseId}/query", null);
 
                 if (!notionResponse.IsSuccessStatusCode)
                 {
                     var error = await notionResponse.Content.ReadAsStringAsync();
-                    Console.WriteLine($"Notion veri çekme hatası: {error}");
                     return new JsonResult(new { error = $"Notion veri çekme hatası: {error}" });
                 }
 
                 var notionData = await notionResponse.Content.ReadAsStringAsync();
-                Console.WriteLine("Notion verileri başarıyla çekildi.");
                 return new JsonResult(new { data = notionData });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Veri çekme hatası: {ex.Message}");
                 return new JsonResult(new { error = $"Veri çekme hatası: {ex.Message}" });
             }
         }
