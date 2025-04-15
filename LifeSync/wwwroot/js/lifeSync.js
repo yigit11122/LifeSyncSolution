@@ -1,27 +1,55 @@
-﻿let lastLifeSyncFetchTime = 0;
+﻿async function saveLifeSyncNote(content) {
+    // lifesync.js
+    const note = {
+        id: crypto.randomUUID(),
+        content: content,
+        createdAt: new Date().toISOString()
+    };
 
-async function fetchLifeSyncData() {
-    const now = Date.now();
-    if (now - lastLifeSyncFetchTime < FETCH_INTERVAL) return;
+
+
+
+    const requestBody = {
+        Source: "lifesync",
+        Data: [note]
+    };
 
     try {
-        const response = await fetch('/Index?handler=FetchData&source=lifesync', { credentials: 'include' });
-        if (!response.ok) throw new Error(`LifeSync veri çekme başarısız: ${response.status} - ${await response.text()}`);
-        const rawData = await response.json();
-        console.log('Çekilen LifeSync verileri:', rawData);
-        const preprocessedData = preprocessTasks(rawData, 'lifesync');
-        await saveToBackend(preprocessedData, 'lifesync');
-        lastLifeSyncFetchTime = now;
-        return preprocessedData;
-    } catch (error) {
-        console.error('LifeSync Hata:', error);
-        return null;
+        const res = await fetch("/api/sync", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(requestBody)
+        });
+
+        if (!res.ok) throw new Error(await res.text());
+        console.log("Not kaydedildi:", note);
+        await loadLifeSyncNotes();
+    } catch (err) {
+        console.error("Not kaydedilemedi:", err.message);
     }
 }
 
-function startLifeSyncPolling() {
-    setInterval(async () => {
-        const data = await fetchLifeSyncData();
-        if (data) displayData(data, 'lifesync');
-    }, FETCH_INTERVAL);
+async function loadLifeSyncNotes() {
+    try {
+        const res = await fetch("/api/lifesync/data");
+        if (!res.ok) throw new Error(await res.text());
+        const notes = await res.json();
+
+        const container = document.getElementById("lifesync-list");
+        container.innerHTML = `<h3>Benim Notlarım</h3><ul>${notes.map(n => `<li>${n.content}</li>`).join('')
+            }</ul>`;
+    } catch (err) {
+        console.error("Notlar yüklenemedi:", err.message);
+    }
 }
+
+document.getElementById("lifesync-submit").addEventListener("click", () => {
+    const input = document.getElementById("lifesync-input");
+    const content = input.value.trim();
+    if (!content) return;
+
+    saveLifeSyncNote(content);
+    input.value = '';
+});
+
+document.addEventListener("DOMContentLoaded", loadLifeSyncNotes);

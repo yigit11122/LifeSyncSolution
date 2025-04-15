@@ -48,7 +48,6 @@ namespace LifeSync.Migrations
         }
 
         /// <inheritdoc />
-        ///denemeeeeee1222222222111111111212
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(

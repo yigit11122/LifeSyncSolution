@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace LifeSync.Controllers
@@ -26,8 +25,6 @@ namespace LifeSync.Controllers
         {
             try
             {
-                Console.WriteLine("🔄 Notion veri çekme isteği geldi.");
-
                 var accessToken = await _context.OAuthTokens
                     .Where(t => t.Source.ToLower() == "notion")
                     .OrderByDescending(t => t.ExpiryDate)
@@ -47,7 +44,6 @@ namespace LifeSync.Controllers
                 if (!notionResponse.IsSuccessStatusCode)
                 {
                     var error = await notionResponse.Content.ReadAsStringAsync();
-                    Console.WriteLine("Notion API Hatası: " + error);
                     return StatusCode((int)notionResponse.StatusCode, new { error = "Notion API hatası", detail = error });
                 }
 
@@ -56,7 +52,6 @@ namespace LifeSync.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine("FetchNotionData exception: " + ex.Message);
                 return StatusCode(500, new { error = "Sunucu hatası", detail = ex.Message });
             }
         }
@@ -67,14 +62,20 @@ namespace LifeSync.Controllers
             try
             {
                 if (request?.Data == null || !request.Data.Any())
-                    return BadRequest("❌ Geçersiz veri: Boş liste.");
+                    return BadRequest("Geçersiz veri: Boş liste.");
 
+                var source = request.Source?.ToLowerInvariant() ?? "";
                 Guid userId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48");
 
-                if (request.Source.ToLower() == "notion" || request.Source.ToLower() == "todoist")
+                //LifeSync özel kontrolü burada
+                if (source == "lifesync")
+                {
+                    userId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48");
+                }
+                else if (source == "todoist" || source == "notion")
                 {
                     var tokenUserId = await _context.OAuthTokens
-                        .Where(t => t.Source.ToLower() == request.Source.ToLower())
+                        .Where(t => t.Source.ToLower() == source)
                         .OrderByDescending(t => t.ExpiryDate)
                         .Select(t => t.UserId)
                         .FirstOrDefaultAsync();
@@ -83,21 +84,19 @@ namespace LifeSync.Controllers
                         userId = tokenUserId;
                 }
 
-                var source = request.Source.ToLower();
-
-                // ✅ 1. Kaynaktaki eski veriyi sil
+                //Eski verileri sil
                 if (source == "todoist")
                 {
                     var eski = _context.Tasks.Where(t => t.Source == source && t.UserId == userId);
                     _context.Tasks.RemoveRange(eski);
                 }
-                else if (source == "notion")
+                else if (source == "notion" || source == "lifesync")
                 {
                     var eski = _context.Notes.Where(n => n.Source == source && n.UserId == userId);
                     _context.Notes.RemoveRange(eski);
                 }
 
-                // ✅ 2. Yeni verileri ekle
+                //Yeni verileri ekle
                 foreach (var item in request.Data)
                 {
                     if (!Guid.TryParse(item.Id, out Guid itemId))
@@ -116,25 +115,25 @@ namespace LifeSync.Controllers
                             UserId = userId
                         });
                     }
-                    else if (source == "notion")
+                    else if (source == "notion" || source == "lifesync")
                     {
                         _context.Notes.Add(new Note
                         {
                             Id = itemId,
                             Content = item.Content,
                             CreatedAt = item.CreatedAt.ToUniversalTime(),
-                            Source = "notion",
+                            Source = source,
                             UserId = userId
                         });
                     }
                 }
 
                 await _context.SaveChangesAsync();
-                return Ok(new { message = $"✅ {request.Source} verileri güncellendi." });
+                return Ok(new { message = $"{request.Source} verileri güncellendi." });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"🔥 Sync hatası: {ex.Message}");
+                return StatusCode(500, $"Sync hatası: {ex.Message}");
             }
         }
 
@@ -147,8 +146,14 @@ namespace LifeSync.Controllers
                 {
                     case "todoist":
                         return Ok(await _context.Tasks.Where(t => t.Source == source).ToListAsync());
+
                     case "notion":
-                        return Ok(await _context.Notes.Where(n => n.Source == source).ToListAsync());
+                    case "lifesync":
+                        return Ok(await _context.Notes
+                            .Where(n => n.Source == source)
+                            .OrderByDescending(n => n.CreatedAt)
+                            .ToListAsync());
+
                     default:
                         return NotFound("Geçersiz kaynak");
                 }

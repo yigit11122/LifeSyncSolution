@@ -1,34 +1,41 @@
-﻿// ✅ HTML injection'a karşı güvenli gösterim
+﻿//HTML injection'a karşı güvenli gösterim
 function escapeHtml(text) {
     const div = document.createElement("div");
     div.textContent = text;
     return div.innerHTML;
 }
 
-// ✅ Markdown'ı temizle (örnek: [link](adres) → link)
 function removeMarkdown(text) {
     return text
-        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // [text](url) → text
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') 
         .replace(/[_*~`>#-]/g, '')               // özel karakterleri temizle
         .trim();
 }
 
-// ✅ Veriyi backend'e gönder
+//Veriyi backend'e gönder
 async function saveToBackend(items, source) {
     try {
         const requestBody = {
             Source: source,
-            Data: items.map(item => ({
-                Id: item.id,
-                Content: item.content,
-                CreatedAt: item.createdAt ?? new Date().toISOString(),
-                DueDate: item.dueDate ?? null,
-                StartDate: item.startDate ?? null,
-                Completed: item.completed ?? false
-            }))
+            Data: items.map(item => {
+                const base = {
+                    Id: item.id,
+                    Content: item.content,
+                    CreatedAt: item.createdAt ?? new Date().toISOString(),
+                    Source: source
+                };
+
+                if (source === "todoist") {
+                    base.DueDate = item.dueDate ?? null;
+                    base.StartDate = item.startDate ?? null;
+                    base.Completed = item.completed ?? false;
+                }
+
+                return base;
+            })
         };
 
-        console.log("📤 Gönderilen veri:", requestBody);
+        console.log("Gönderilen veri:", requestBody);
 
         const response = await fetch('/api/sync', {
             method: 'POST',
@@ -38,18 +45,19 @@ async function saveToBackend(items, source) {
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error(`❌ Sync başarısız: ${response.status} - ${errorText}`);
+            console.error(`Sync başarısız: ${response.status} - ${errorText}`);
             throw new Error(errorText);
         }
 
         const result = await response.json();
-        console.log('✅ Sync başarılı:', result);
+        console.log('Sync başarılı:', result);
     } catch (error) {
-        console.error('🔥 Sync hatası:', error.message);
+        console.error('Sync hatası:', error.message);
     }
 }
 
-// ✅ Backend'den veri çek
+
+//Backend'den veri çek
 async function fetchDataFromBackend(source) {
     try {
         const response = await fetch(`/Index?handler=FetchData&source=${source}`, { credentials: 'include' });
@@ -63,7 +71,7 @@ async function fetchDataFromBackend(source) {
     }
 }
 
-// ✅ Veriyi normalize et + filtrele + temizle
+//Veriyi normalize et + filtrele + temizle
 function preprocessTasks(data, source) {
     if (!Array.isArray(data)) {
         console.error(`${source} verisi geçersiz:`, data);
@@ -92,11 +100,11 @@ function preprocessTasks(data, source) {
         }));
     }
 
-    // Diğer kaynaklar (opsiyonel kullanım)
+    // Diğer kaynaklar 
     return data;
 }
 
-// ✅ Verileri türüne göre gruplandır
+//Verileri türüne göre gruplandır
 function organizeData(data, source) {
     if (source === 'todoist') {
         return {
@@ -110,7 +118,7 @@ function organizeData(data, source) {
     return data;
 }
 
-// ✅ Verileri HTML'e bas
+//Verileri HTML'e bas
 function displayData(data, source) {
     const container = document.getElementById(`${source}-list`);
     if (!container) {
@@ -136,5 +144,44 @@ function displayData(data, source) {
         }
     }
 
-    console.log(`📊 ${source} verileri ekrana basıldı:`, organized);
+    console.log(`${source} verileri ekrana basıldı:`, organized);
+}
+async function saveNewNote() {
+    const content = document.getElementById("note-content").value.trim();
+    const status = document.getElementById("note-status");
+
+    if (!content) {
+        status.innerText = "Lütfen boş not girmeyin.";
+        return;
+    }
+
+    try {
+        const requestBody = {
+            Source: "lifesync",
+            Data: [
+                {
+                    Id: crypto.randomUUID(),
+                    Content: content,
+                    CreatedAt: new Date().toISOString(),
+                    DueDate: null,
+                    StartDate: null,
+                    Completed: false
+                }
+            ]
+        };
+
+        const response = await fetch('/api/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) throw new Error(await response.text());
+
+        status.innerText = "Not kaydedildi!";
+        document.getElementById("note-content").value = "";
+    } catch (err) {
+        console.error("Not kaydetme hatası:", err.message);
+        status.innerText = "Kaydetme sırasında hata oluştu.";
+    }
 }

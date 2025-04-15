@@ -10,21 +10,109 @@
     <meta charset="UTF-8">
     <title>@ViewData["Title"]</title>
     <link rel="stylesheet" href="/css/site.css" />
+    <style>
+        body {
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            font-family: 'Segoe UI', sans-serif;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: #007bff;
+        }
+
+        .integration-box {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+            button:hover {
+                background-color: #0056b3;
+            }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin-top: 10px;
+        }
+
+        li {
+            background-color: #e9ecef;
+            padding: 8px 12px;
+            border-radius: 5px;
+            margin-bottom: 6px;
+        }
+
+        .note-form {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+
+            .note-form textarea {
+                width: 100%;
+                height: 100px;
+                padding: 10px;
+                border-radius: 5px;
+                border: 1px solid #ccc;
+                resize: none;
+            }
+
+            .note-form button {
+                margin-top: 10px;
+            }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>LifeSync</h1>
 
-        <div>
+        <div class="integration-box">
             <h2>Todoist</h2>
             <button id="connect-todoist">Connect with Todoist</button>
             <div id="todoist-list"></div>
         </div>
 
-        <div>
+        <div class="integration-box">
             <h2>Notion</h2>
             <button id="connect-notion">Connect with Notion</button>
             <div id="notion-list"></div>
+        </div>
+
+        <div class="integration-box">
+            <h2>Kendi Notların (LifeSync)</h2>
+            <textarea id="lifesync-input" rows="4" cols="50" placeholder="Notunu yaz..."></textarea><br>
+            <button id="lifesync-submit">Notu Kaydet</button>
+            <div id="lifesync-list"></div>
         </div>
     </div>
 
@@ -36,11 +124,12 @@
         <script src="/js/site.js"></script>
         <script src="/js/todoist.js"></script>
         <script src="/js/notion.js"></script>
+        <script src="/js/lifeSync.js"></script>
 
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 const urlParams = new URLSearchParams(window.location.search);
-                const sources = ['todoist', 'notion'];
+                const sources = ['todoist', 'notion', 'lifesync'];
 
                 // Yetkilendirme sonrası veri çekme
                 if (urlParams.get('source') === 'todoist' && urlParams.get('code')) {
@@ -57,7 +146,7 @@
                     });
                 }
 
-                // Tüm kaynaklardan veri çekme
+                // Sayfa açıldığında tüm kaynaklardan veri çek
                 sources.forEach(source => {
                     fetchDataFromBackend(source).then(data => {
                         if (data) displayData(data, source);

@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+ï»¿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using backend.models;
@@ -20,13 +20,13 @@ namespace LifeSync.Pages
 
         public IActionResult OnGet()
         {
-            _logger.LogInformation("Index sayfasý yüklendi.");
+            _logger.LogInformation("Index sayfasÄ± yÃ¼klendi.");
             return Page();
         }
 
         public async Task<IActionResult> OnGetFetchData(string source)
         {
-            _logger.LogInformation($"Veri çekme isteði alýndý: {source ?? "null"}");
+            _logger.LogInformation($"Veri Ã§ekme isteÄŸi alÄ±ndÄ±: {source ?? "null"}");
             if (string.IsNullOrEmpty(source))
             {
                 _logger.LogWarning("Kaynak parametresi eksik.");
@@ -51,20 +51,20 @@ namespace LifeSync.Pages
                         data = (await _context.Tasks.Where(t => t.Source == source).ToListAsync()).Cast<object>().ToList();
                         break;
                     case "lifesync":
-                        data = (await _context.Tasks.Where(t => t.Source == source).ToListAsync()).Cast<object>().ToList();
+                        data = (await _context.Notes.Where(n => n.Source == source).ToListAsync()).Cast<object>().ToList(); 
                         break;
                     default:
-                        _logger.LogWarning($"Geçersiz veri kaynaðý: {source}");
-                        return new JsonResult(new { error = "Geçersiz kaynak" });
+                        _logger.LogWarning($"GeÃ§ersiz veri kaynaÄŸÄ±: {source}");
+                        return new JsonResult(new { error = "GeÃ§ersiz kaynak" });
                 }
 
-                _logger.LogInformation($"{source} verileri çekildi: {data.Count} kayýt.");
+                _logger.LogInformation($"{source} verileri Ã§ekildi: {data.Count} kayÄ±t.");
                 return new JsonResult(data);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Veri çekme hatasý: {source}");
-                return StatusCode(500, new { error = $"Veri çekme hatasý: {ex.Message}" });
+                _logger.LogError(ex, $"Veri Ã§ekme hatasÄ±: {source}");
+                return StatusCode(500, new { error = $"Veri Ã§ekme hatasÄ±: {ex.Message}" });
             }
         }
     }
