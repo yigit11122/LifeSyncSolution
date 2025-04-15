@@ -69,7 +69,6 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
- //aa
 
 if(null==null)
 {

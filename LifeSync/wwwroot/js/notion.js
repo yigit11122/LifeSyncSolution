@@ -1,22 +1,19 @@
 ﻿let lastNotionFetchTime = 0;
-
 function initiateNotionOAuth() {
     console.log('Notion OAuth başlatılıyor...');
     const state = Math.random().toString(36).substring(2);
     const authUrl = `/auth/notion/connect?state=${state}`;
     window.location.href = authUrl;
 }
-
 async function fetchNotionPages() {
     const now = Date.now();
     if (now - lastNotionFetchTime < window.FETCH_INTERVAL) {
         console.log('Notion veri çekme için bekleme süresi: FETCH_INTERVAL');
         return;
     }
-
     try {
         console.log('Notion veri çekme isteği gönderiliyor...');
-        const response = await fetch('/api/fetch-notion-data', { credentials: 'include' });
+        const response = await fetch('/api/notion/fetch', { credentials: 'include' });
         if (!response.ok) {
             const errorText = await response.text();
             console.error(`Notion veri çekme başarısız: ${response.status} - ${errorText}`);
@@ -42,7 +39,6 @@ async function fetchNotionPages() {
         return null;
     }
 }
-
 function preprocessNotionPages(data) {
     const parsedData = JSON.parse(data);
     const pages = parsedData.results || [];
@@ -63,5 +59,4 @@ function preprocessNotionPages(data) {
     console.log('İşlenmiş Notion verileri:', processedPages);
     return processedPages;
 }
-
 document.getElementById("connect-notion").addEventListener("click", initiateNotionOAuth);

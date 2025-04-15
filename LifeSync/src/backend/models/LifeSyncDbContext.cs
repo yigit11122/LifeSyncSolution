@@ -45,7 +45,11 @@ namespace backend.models
         public bool Completed { get; set; } = false;
         public string Source { get; set; } = "";
         public Guid? UserId { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
+
+
 
     public class Event
     {

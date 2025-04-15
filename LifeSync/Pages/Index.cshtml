@@ -8,7 +8,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewData["Title"]</title>
     <link rel="stylesheet" href="/css/site.css" />
 </head>
@@ -23,67 +22,45 @@
         </div>
 
         <div>
-            <h2>Google Calendar</h2>
-            <button id="connect-google">Connect with Google Calendar</button>
-            <div id="googleCalendar-list"></div>
-        </div>
-
-        <div>
             <h2>Notion</h2>
             <button id="connect-notion">Connect with Notion</button>
             <div id="notion-list"></div>
-        </div>
-
-        <div>
-            <h2>Fitbit</h2>
-            <button id="connect-fitbit">Connect with Fitbit</button>
-            <div id="fitbit-list"></div>
-        </div>
-
-        <div>
-            <h2>LifeSync</h2>
-            <button id="fetch-lifesync">Fetch LifeSync Data</button>
-            <div id="lifesync-list"></div>
         </div>
     </div>
 
     @section Scripts {
         <script>
-            // Global FETCH_INTERVAL tanımı
             window.FETCH_INTERVAL = 60000;
         </script>
+
         <script src="/js/site.js"></script>
+        <script src="/js/todoist.js"></script>
         <script src="/js/notion.js"></script>
+
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                console.log('connect-todoist butonu tıklanabilir hale getirildi.');
-                console.log('connect-google butonu tıklanabilir hale getirildi.');
-                console.log('connect-notion butonu tıklanabilir hale getirildi.');
-                console.log('connect-fitbit butonu tıklanabilir hale getirildi.');
-                console.log('fetch-lifesync butonu tıklanabilir hale getirildi.');
-
-                // Notion verilerini çekme işlemi
                 const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.get('source') === 'notion' && urlParams.get('code')) {
-                    console.log('Notion yetkilendirme sonrası veri çekme işlemi başlatılıyor...');
-                    fetchNotionPages().then(pages => {
-                        if (pages) {
-                            displayData(pages, 'notion');
-                        }
+                const sources = ['todoist', 'notion'];
+
+                // Yetkilendirme sonrası veri çekme
+                if (urlParams.get('source') === 'todoist' && urlParams.get('code')) {
+                    console.log("Todoist yetkilendirme sonrası veri çekiliyor...");
+                    fetchTodoistTasks().then(tasks => {
+                        if (tasks) displayData(tasks, 'todoist');
                     });
                 }
 
-                // Diğer kaynaklar için veri çekme
-                const sources = ['todoist', 'googleCalendar', 'notion', 'fitbit', 'lifesync'];
+                if (urlParams.get('source') === 'notion' && urlParams.get('code')) {
+                    console.log("Notion yetkilendirme sonrası veri çekiliyor...");
+                    fetchNotionPages().then(pages => {
+                        if (pages) displayData(pages, 'notion');
+                    });
+                }
+
+                // Tüm kaynaklardan veri çekme
                 sources.forEach(source => {
-                    console.log(`${source} için veri çekme denemesi yapılıyor...`);
                     fetchDataFromBackend(source).then(data => {
-                        if (data && data.length > 0) {
-                            console.log(`${source} verileri başarıyla çekildi ve görüntülendi.`);
-                            displayData(data, source);
-                        } else {
-                            console.log(`${source} için veri boş veya geçersiz:`, data);
-                        }
+                        if (data) displayData(data, source);
                     });
                 });
             });
