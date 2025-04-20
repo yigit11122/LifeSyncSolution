@@ -145,14 +145,12 @@ function displayData(data, source) {
     }
 
     if (source === 'lifesync') {
-        const notes = Array.isArray(data) ? data : []; // gelen veriyi direkt kullan
-        if (notes.length > 0) {
-            container.innerHTML += `<h3>Benim Notlarım</h3><ul>${notes.map(n => `<li>${escapeHtml(n.content)}</li>`).join('')}</ul>`;
+        if (Array.isArray(organized) && organized.length > 0) {
+            container.innerHTML += `<h3>Benim Notlarım</h3><ul>${organized.map(n => `<li>${escapeHtml(n.content)}</li>`).join('')}</ul>`;
         } else {
-            container.innerHTML = `<p>Henüz not bulunmamaktadır.</p>`;
+            container.innerHTML = "<p>Henüz not yok.</p>";
         }
     }
-
 
     console.log(`${source} verileri ekrana basıldı:`, organized);
 }
