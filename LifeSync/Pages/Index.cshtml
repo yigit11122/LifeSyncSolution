@@ -4,156 +4,73 @@
     ViewData["Title"] = "LifeSync";
 }
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>@ViewData["Title"]</title>
-    <link rel="stylesheet" href="/css/site.css" />
-    <style>
-        body {
-            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
-            font-family: 'Segoe UI', sans-serif;
-            color: #333;
-            margin: 0;
-            padding: 0;
-        }
+<div class="layout">
+    <aside class="sidebar">
+        <div class="logo">🧠 LifeSync</div>
+        <nav>
+            <a href="/Index">📋 Ana Sayfa</a>
+            <a href="/Privacy">🔒 Gizlilik</a>
+            <a href="#">⚙️ Ayarlar</a>
+        </nav>
+    </aside>
 
-        .container {
-            max-width: 900px;
-            margin: 40px auto;
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
+    <main class="content">
+        <h1>Hoş Geldin 👋</h1>
+        <p class="subtitle">Günlük görevlerini ve notlarını buradan yönetebilirsin.</p>
 
-        h1 {
-            text-align: center;
-            margin-bottom: 30px;
-        }
+        <div class="card-grid">
+            <div class="card">
+                <h2>Todoist</h2>
+                <ul id="todoist-list"></ul>
+                <button id="connect-todoist">🔗 Bağlan</button>
+            </div>
 
-        h2 {
-            color: #007bff;
-        }
+            <div class="card">
+                <h2>Notion</h2>
+                <ul id="notion-list"></ul>
+                <button id="connect-notion">🔗 Bağlan</button>
+            </div>
 
-        .integration-box {
-            margin-bottom: 40px;
-            padding: 20px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            background: #f9f9f9;
-        }
+            <div class="card">
+                <h2>Notlarım</h2>
+                <ul id="lifesync-list"></ul>
+                <textarea id="lifesync-input" maxlength="200" placeholder="Yeni not yaz..."></textarea>
+                <div class="note-footer">
+                    <span id="char-count">0/200</span>
+                    <button id="lifesync-submit">➕ Ekle</button>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
 
-        button {
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-            margin-top: 10px;
-        }
+@section Scripts {
+    <script>
+        window.FETCH_INTERVAL = 60000;
 
-            button:hover {
-                background-color: #0056b3;
+        document.addEventListener("DOMContentLoaded", () => {
+            const sources = ['todoist', 'notion', 'lifesync'];
+
+            for (const source of sources) {
+                fetch(`/Index?handler=FetchData&source=${source}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        const limited = data.slice(0, 2); // sadece ilk 2 içerik göster
+                        displayData(limited, source);
+                    })
+                    .catch(err => console.error(`${source} veri çekme hatası:`, err));
             }
 
-        ul {
-            list-style: none;
-            padding: 0;
-            margin-top: 10px;
-        }
-
-        li {
-            background-color: #e9ecef;
-            padding: 8px 12px;
-            border-radius: 5px;
-            margin-bottom: 6px;
-        }
-
-        .note-form {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #ddd;
-        }
-
-            .note-form textarea {
-                width: 100%;
-                height: 100px;
-                padding: 10px;
-                border-radius: 5px;
-                border: 1px solid #ccc;
-                resize: none;
-            }
-
-            .note-form button {
-                margin-top: 10px;
-            }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>LifeSync</h1>
-
-        <div class="integration-box">
-            <h2>Todoist</h2>
-            <button id="connect-todoist">Connect with Todoist</button>
-            <div id="todoist-list"></div>
-        </div>
-
-        <div class="integration-box">
-            <h2>Notion</h2>
-            <button id="connect-notion">Connect with Notion</button>
-            <div id="notion-list"></div>
-        </div>
-
-        <div class="integration-box">
-            <h2>Kendi Notların (LifeSync)</h2>
-            <textarea id="lifesync-input" rows="4" cols="50" placeholder="Notunu yaz..."></textarea><br>
-            <button id="lifesync-submit">Notu Kaydet</button>
-            <div id="lifesync-list"></div>
-        </div>
-    </div>
-
-    @section Scripts {
-        <script>
-            window.FETCH_INTERVAL = 60000;
-        </script>
-
-        <script src="/js/site.js"></script>
-        <script src="/js/todoist.js"></script>
-        <script src="/js/notion.js"></script>
-        <script src="/js/lifeSync.js"></script>
-
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                const urlParams = new URLSearchParams(window.location.search);
-                const sources = ['todoist', 'notion', 'lifesync'];
-
-                // Yetkilendirme sonrası veri çekme
-                if (urlParams.get('source') === 'todoist' && urlParams.get('code')) {
-                    console.log("Todoist yetkilendirme sonrası veri çekiliyor...");
-                    fetchTodoistTasks().then(tasks => {
-                        if (tasks) displayData(tasks, 'todoist');
-                    });
-                }
-
-                if (urlParams.get('source') === 'notion' && urlParams.get('code')) {
-                    console.log("Notion yetkilendirme sonrası veri çekiliyor...");
-                    fetchNotionPages().then(pages => {
-                        if (pages) displayData(pages, 'notion');
-                    });
-                }
-
-                // Sayfa açıldığında tüm kaynaklardan veri çek
-                sources.forEach(source => {
-                    fetchDataFromBackend(source).then(data => {
-                        if (data) displayData(data, source);
-                    });
-                });
+            const input = document.getElementById("lifesync-input");
+            const count = document.getElementById("char-count");
+            input.addEventListener("input", () => {
+                count.innerText = `${input.value.length}/200`;
             });
-        </script>
-    }
-</body>
-</html>
+        });
+    </script>
+
+    <script src="/js/site.js"></script>
+    <script src="/js/lifeSync.js"></script>
+    <script src="/js/todoist.js"></script>
+    <script src="/js/notion.js"></script>
+}

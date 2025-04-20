@@ -1,69 +1,155 @@
+/* === Font ayarý === */
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(to right, #f7f9fc, #e3f2fd);
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f0f2f5;
     margin: 0;
     padding: 0;
+    color: #2e2e2e;
 }
 
-.container {
-    max-width: 900px;
-    margin: 30px auto;
+/* === Ana layout yapýsý === */
+.layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* === Sidebar === */
+.sidebar {
+    width: 240px;
+    background-color: #2f3e46;
+    color: white;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+    .sidebar .logo {
+        font-size: 1.6rem;
+        font-weight: bold;
+        margin-bottom: 30px;
+    }
+
+    .sidebar nav a {
+        color: white;
+        text-decoration: none;
+        margin-bottom: 15px;
+        font-size: 1rem;
+        transition: padding-left 0.2s ease, color 0.2s ease;
+    }
+
+        .sidebar nav a:hover {
+            text-decoration: underline;
+            padding-left: 4px;
+            color: #ced4da;
+        }
+
+/* === Ýçerik alaný === */
+.content {
+    flex: 1;
+    padding: 40px;
+    background-color: #f7f9fc;
+}
+
+h1 {
+    font-size: 2rem;
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    font-size: 1rem;
+    color: #6c757d;
+    margin-bottom: 30px;
+}
+
+/* === Kart grid yapýsý === */
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+/* === Kartlar === */
+.card {
     background-color: white;
-    padding: 30px;
     border-radius: 12px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
+    .card h2 {
+        margin-top: 0;
+        font-size: 1.2rem;
+        color: #212529;
+    }
+
+ul {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 10px;
+}
+
+li {
+    background-color: #e9ecef;
+    padding: 10px 12px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+}
+
+/* === Not yazma kutusu === */
+textarea {
+    width: 100%;
+    height: 80px;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    resize: none;
+    margin-top: 10px;
+    font-size: 0.95rem;
+    font-family: 'Inter', sans-serif;
+}
+
+/* === Not ekleme alt bölümü === */
+.note-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+}
+
+    .note-footer span {
+        color: #888;
+        font-size: 0.85rem;
+    }
+
+    .note-footer button {
+        background-color: #28a745;
+        border: none;
+        padding: 8px 16px;
+        color: white;
+        border-radius: 6px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+        .note-footer button:hover {
+            background-color: #1e7e34;
+        }
+
+/* === Genel buton stili === */
 button {
-    padding: 10px 25px;
-    margin: 10px 0;
     background-color: #007bff;
     color: white;
     border: none;
+    padding: 10px 16px;
     border-radius: 6px;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.3s;
+    transition: background-color 0.2s ease;
+    margin-top: 10px;
 }
 
     button:hover {
         background-color: #0056b3;
-    }
-
-h2 {
-    border-bottom: 2px solid #ccc;
-    padding-bottom: 5px;
-    margin-top: 30px;
-}
-
-ul {
-    list-style-type: disc;
-    padding-left: 20px;
-}
-
-li {
-    margin: 8px 0;
-}
-
-.note-section {
-    margin-top: 40px;
-}
-
-textarea {
-    width: 100%;
-    height: 100px;
-    padding: 10px;
-    font-size: 1rem;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    resize: vertical;
-}
-
-.note-save {
-    margin-top: 10px;
-    background-color: #28a745;
-}
-
-    .note-save:hover {
-        background-color: #1e7e34;
     }
