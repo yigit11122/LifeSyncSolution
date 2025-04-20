@@ -1,8 +1,62 @@
 ﻿@page
-@model PrivacyModel
+@model LifeSync.Pages.PrivacyModel
 @{
-    ViewData["Title"] = "Privacy PolicyAAAAA";
+    ViewData["Title"] = "Gizlilik Politikası";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="logo">🧠 LifeSync</div>
+        <nav>
+            <a href="/Index">📋 Ana Sayfa</a>
+            <a href="/Privacy">🔒 Gizlilik</a>
+            <a href="#">⚙️ Ayarlar</a>
+        </nav>
+    </aside>
+
+    <main class="content">
+        <h1>Gizlilik Politikası</h1>
+        <p class="subtitle">Kullanıcı verilerinizin güvenliği bizim için önemlidir.</p>
+
+        <div class="card">
+            <h2>1. Veri Toplama</h2>
+            <p>
+                LifeSync yalnızca hizmetlerin çalışması için gerekli olan minimum düzeyde veri toplar.
+                Bu veriler e-posta adresiniz, notlarınız, görevleriniz gibi içeriklerle sınırlıdır.
+            </p>
+        </div>
+
+        <div class="card">
+            <h2>2. Veri Saklama</h2>
+            <p>
+                Verileriniz güvenli veri tabanlarında saklanır ve sadece sizin erişiminize açıktır.
+                Üçüncü taraflarla paylaşılmaz ve reklam amacıyla kullanılmaz.
+            </p>
+        </div>
+
+        <div class="card">
+            <h2>3. Üçüncü Taraf Entegrasyonları</h2>
+            <p>
+                Todoist, Notion gibi entegrasyonlar yalnızca sizin izninizle gerçekleştirilir
+                ve veriler yalnızca görüntülenir, kaydedilmez.
+            </p>
+        </div>
+
+        <div class="card">
+            <h2>4. Çerez Kullanımı</h2>
+            <p>
+                LifeSync, kullanıcı deneyimini iyileştirmek için minimum düzeyde çerez kullanır.
+                Çerezler yalnızca oturum yönetimi ve teknik işler için kullanılır.
+            </p>
+        </div>
+
+        <div class="card">
+            <h2>5. Haklarınız</h2>
+            <p>
+                Verilerinizi istediğiniz zaman görüntüleyebilir, silebilir ya da dışa aktarabilirsiniz.
+                Gizliliğiniz bizim önceliğimizdir. Gizlilikle ilgili her konuda bize
+                <strong>privacy@lifesync.com</strong> adresinden ulaşabilirsiniz.
+            </p>
+        </div>
+    </main>
+</div>
