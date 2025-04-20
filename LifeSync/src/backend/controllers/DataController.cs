@@ -90,7 +90,7 @@ namespace LifeSync.Controllers
                     var eski = _context.Tasks.Where(t => t.Source == source && t.UserId == userId);
                     _context.Tasks.RemoveRange(eski);
                 }
-                else if (source == "notion" || source == "lifesync")
+                else if (source == "notion")
                 {
                     var eski = _context.Notes.Where(n => n.Source == source && n.UserId == userId);
                     _context.Notes.RemoveRange(eski);

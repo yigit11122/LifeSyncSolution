@@ -144,8 +144,19 @@ function displayData(data, source) {
         }
     }
 
+    if (source === 'lifesync') {
+        const notes = Array.isArray(data) ? data : []; // gelen veriyi direkt kullan
+        if (notes.length > 0) {
+            container.innerHTML += `<h3>Benim Notlarım</h3><ul>${notes.map(n => `<li>${escapeHtml(n.content)}</li>`).join('')}</ul>`;
+        } else {
+            container.innerHTML = `<p>Henüz not bulunmamaktadır.</p>`;
+        }
+    }
+
+
     console.log(`${source} verileri ekrana basıldı:`, organized);
 }
+
 async function saveNewNote() {
     const content = document.getElementById("note-content").value.trim();
     const status = document.getElementById("note-status");
