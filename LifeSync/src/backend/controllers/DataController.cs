@@ -108,16 +108,13 @@ namespace LifeSync.Controllers
                         {
                             Id = itemId,
                             Content = item.Content,
-                            DueDate = string.IsNullOrEmpty(item.DueDate) ? null : DateTime.Parse(item.DueDate),
+                            DueDate = DateTime.TryParse(item.DueDate, out var dt) ? dt.ToUniversalTime() : null,
                             Completed = item.Completed,
-                            CreatedAt = item.CreatedAt.Kind == DateTimeKind.Utc
-                                        ? item.CreatedAt
-                                        : item.CreatedAt.ToUniversalTime(),
+                            CreatedAt = item.CreatedAt.ToUniversalTime(),
                             Source = "todoist",
                             UserId = userId
                         });
                     }
-
                     else if (source == "notion" || source == "lifesync")
                     {
                         _context.Notes.Add(new Note

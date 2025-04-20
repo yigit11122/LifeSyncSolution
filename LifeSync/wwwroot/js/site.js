@@ -21,15 +21,16 @@ async function saveToBackend(items, source) {
                 const base = {
                     Id: item.id,
                     Content: item.content,
-                    CreatedAt: item.createdAt ?? new Date().toISOString(),
+                    CreatedAt: new Date(item.createdAt ?? Date.now()).toISOString(),
                     Source: source
                 };
 
                 if (source === "todoist") {
-                    base.DueDate = item.dueDate ?? null;
-                    base.StartDate = item.startDate ?? null;
+                    base.DueDate = item.dueDate ? new Date(item.dueDate).toISOString() : null;
+                    base.StartDate = item.startDate ? new Date(item.startDate).toISOString() : null;
                     base.Completed = item.completed ?? false;
                 }
+
 
                 return base;
             })
