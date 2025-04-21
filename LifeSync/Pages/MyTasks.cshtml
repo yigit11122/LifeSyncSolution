@@ -1,0 +1,91 @@
+﻿@page
+@model LifeSync.Pages.MyTasksModel
+@{
+    ViewData["Title"] = "Görevlerim";
+}
+
+<div class="layout">
+    <aside class="sidebar">
+        <div class="logo">🧠 <span>LifeSync</span></div>
+        <nav class="nav-links">
+            <a asp-page="/Index">📋 Ana Sayfa</a>
+            <a asp-page="/Privacy">🔒 Gizlilik</a>
+            <a asp-page="/Settings">⚙️ Ayarlar</a>
+        </nav>
+    </aside>
+
+    <main class="content">
+        <h1>🧾 Görevlerim</h1>
+        <p class="subtitle">Kendi görevlerini başlık ve etiketleriyle oluşturabilir, takip edebilirsin.</p>
+
+        <div class="note-form">
+            <form method="post" asp-page-handler="Add">
+                <div style="margin-bottom: 10px;">
+                    <label><strong>Başlık</strong></label><br />
+                    <input type="text" name="TaskTitle" class="form-control" placeholder="Görev başlığı..." required />
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <label><strong>Etiket</strong></label><br />
+                    <select name="TaskTag" class="form-control" required>
+                        <option value="">Etiket seç...</option>
+                        <option>İş</option>
+                        <option>Okul</option>
+                        <option>Sağlık</option>
+                        <option>Kişisel</option>
+                        <option>Diğer</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <label><strong>Açıklama</strong></label><br />
+                    <textarea name="TaskContent" class="form-control" rows="4" placeholder="Görev detayları..." required></textarea>
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <label><strong>Son Tarih (opsiyonel)</strong></label><br />
+                    <input type="date" name="TaskDueDate" class="form-control" />
+                </div>
+
+                <button type="submit" class="btn btn-primary">➕ Görevi Ekle</button>
+            </form>
+        </div>
+
+        <hr style="margin: 30px 0;" />
+
+        @if (Model.Tasks.Count == 0)
+        {
+            <p>📭 Henüz görev eklenmemiş.</p>
+        }
+        else
+        {
+            <div class="card-grid">
+                @foreach (var task in Model.Tasks)
+                {
+                    var parts = task.Content.Split(" | ");
+                    var title = parts.Length > 0 ? parts[0] : "Başlıksız";
+                    var tag = parts.Length > 1 ? parts[1] : "Etiket yok";
+                    var desc = parts.Length > 2 ? parts[2] : "";
+
+                    <div class="card">
+                        <h2>@title</h2>
+                        <p><strong>Etiket:</strong> @tag</p>
+                        <p>@desc</p>
+
+                        @if (task.DueDate.HasValue)
+                        {
+                            <p><strong>Son Tarih:</strong> @task.DueDate.Value.ToShortDateString()</p>
+                        }
+
+                        <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 10px;">
+                            <form method="post" asp-page-handler="Delete" asp-route-id="@task.Id" onsubmit="return confirm('Bu görevi silmek istiyor musun?');">
+                                <button type="submit" class="btn btn-danger btn-sm">🗑️ Sil</button>
+                            </form>
+                            <a href="/EditTask?id=@task.Id" class="btn btn-secondary btn-sm">✏️ Düzenle</a>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </main>
+</div>

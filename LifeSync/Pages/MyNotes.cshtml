@@ -1,0 +1,81 @@
+﻿@page
+@model LifeSync.Pages.MyNotesModel
+@{
+    ViewData["Title"] = "Notlarım";
+}
+
+<div class="layout">
+    <aside class="sidebar">
+        <div class="logo">🧠 <span>LifeSync</span></div>
+        <nav class="nav-links">
+            <a asp-page="/Index">📋 Ana Sayfa</a>
+            <a asp-page="/Privacy">🔒 Gizlilik</a>
+            <a asp-page="/Settings">⚙️ Ayarlar</a>
+        </nav>
+    </aside>
+
+    <main class="content">
+        <h1>🗂️ Notlarım</h1>
+        <p class="subtitle">Buradan notlarını başlık ve etiketlerine göre ekleyebilir, düzenleyebilir veya silebilirsin.</p>
+
+        <div class="note-form">
+            <form method="post" asp-page-handler="Add">
+                <div style="margin-bottom: 10px;">
+                    <label><strong>Başlık</strong></label><br />
+                    <input type="text" name="NoteTitle" class="form-control" placeholder="Not başlığı..." required />
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <label><strong>Etiket</strong></label><br />
+                    <select name="NoteTag" class="form-control" required>
+                        <option value="">Etiket seç...</option>
+                        <option>Kişisel</option>
+                        <option>İş</option>
+                        <option>Okul</option>
+                        <option>Alışveriş</option>
+                        <option>Diğer</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <label><strong>İçerik</strong></label><br />
+                    <textarea name="NoteContent" class="form-control" rows="4" placeholder="Not içeriğini buraya yaz..." required></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">➕ Notu Ekle</button>
+            </form>
+        </div>
+
+        <hr style="margin: 30px 0;" />
+
+        @if (Model.Notes.Count == 0)
+        {
+            <p>📭 Hiç not eklenmemiş.</p>
+        }
+        else
+        {
+            <div class="card-grid">
+                @foreach (var note in Model.Notes)
+                {
+                    var parts = note.Content.Split(" | ");
+                    var title = parts.Length > 0 ? parts[0] : "Başlıksız";
+                    var tags = parts.Length > 1 ? parts[1] : "Etiket yok";
+                    var content = parts.Length > 2 ? parts[2] : "";
+
+                    <div class="card">
+                        <h2>@title</h2>
+                        <p><strong>Etiket:</strong> @tags</p>
+                        <p>@content</p>
+
+                        <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 10px;">
+                            <form method="post" asp-page-handler="Delete" asp-route-id="@note.Id" onsubmit="return confirm('Bu notu silmek istediğine emin misin?');">
+                                <button type="submit" class="btn btn-danger btn-sm">🗑️ Sil</button>
+                            </form>
+                            <a href="/EditNote?id=@note.Id" class="btn btn-secondary btn-sm">✏️ Düzenle</a>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </main>
+</div>

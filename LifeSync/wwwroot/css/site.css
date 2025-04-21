@@ -68,11 +68,11 @@ li {
         font-size: 1rem;
     }
 
-/* ✔️ Liste içeriği için ayrı stiller */
 .list {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    margin-top: 10px;
 }
 
 .list-item {
@@ -110,11 +110,13 @@ button {
         background-color: #1e7e34;
     }
 
-/* ✨ SIDEBAR VE LAYOUT YAPISI */
-
 .layout {
     display: flex;
+    width: 100%;
     min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 .sidebar {
@@ -150,9 +152,18 @@ button {
 
 .content {
     flex-grow: 1;
-    padding: 40px 5%;
+    padding: 40px;
     background-color: #ecf0f3;
+    width: calc(100% - 250px);
+    max-width: 100%;
+    box-sizing: border-box;
 }
+
+    .content > * {
+        max-width: 1200px;
+        margin-left: auto;
+        margin-right: auto;
+    }
 
 .subtitle {
     font-size: 1.1rem;
@@ -167,21 +178,38 @@ button {
     gap: 20px;
 }
 
+/* 🎨 Kart Stili */
 .card {
     background: white;
     padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    border-radius: 18px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
     flex: 1;
-    min-width: 280px;
-    max-width: 320px;
+    min-width: 300px;
+    max-width: 350px;
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
+    position: relative;
 }
 
-    .card h2 {
-        font-size: 1.3rem;
-        color: #007bff;
-        margin-bottom: 15px;
+    .card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
     }
+
+    .card h2 {
+        font-size: 1.25rem;
+        color: #1e88e5;
+        border-bottom: 1px solid #e0e0e0;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+        .card h2 .section-title {
+            font-weight: 600;
+        }
 
     .card textarea {
         margin-top: 15px;
@@ -199,7 +227,6 @@ button {
         color: #666;
     }
 
-/* 🛡️ Privacy.cshtml için özel stil (gizlilik politikası) */
 .privacy-card {
     background-color: #fff;
     padding: 20px;
@@ -219,7 +246,6 @@ button {
         font-size: 1rem;
         line-height: 1.6;
     }
-
 
 .card p {
     margin: 6px 0;
@@ -241,3 +267,5 @@ button {
     .btn-link:hover {
         background-color: #0056b3;
     }
+
+

@@ -1,0 +1,73 @@
+﻿@page
+@model LifeSync.Pages.EditTaskModel
+@{
+    ViewData["Title"] = "Görev Düzenle";
+}
+
+<div class="layout">
+    <aside class="sidebar">
+        <div class="logo">🧠 <span>LifeSync</span></div>
+        <nav class="nav-links">
+            <a asp-page="/Index">📋 Ana Sayfa</a>
+            <a asp-page="/Privacy">🔒 Gizlilik</a>
+            <a asp-page="/Settings">⚙️ Ayarlar</a>
+        </nav>
+    </aside>
+
+    <main class="content">
+        <h1>✏️ Görevi Düzenle</h1>
+        <p class="subtitle">Bu sayfada görev detaylarını güncelleyebilirsin.</p>
+
+        @if (Model.Task == null)
+        {
+            <p>❌ Görev bulunamadı.</p>
+        }
+        else
+        {
+            var parts = Model.Task.Content.Split(" | ");
+            var title = parts.Length > 0 ? parts[0] : "";
+            var tag = parts.Length > 1 ? parts[1] : "";
+            var desc = parts.Length > 2 ? parts[2] : "";
+
+            <form method="post">
+                <input type="hidden" name="Id" value="@Model.Task.Id" />
+
+                <div style="margin-bottom: 10px;">
+                    <label><strong>Başlık</strong></label><br />
+                    <input type="text" name="Title" class="form-control" value="@title" required />
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <label><strong>Etiket</strong></label><br />
+                    <select name="Tag" class="form-control" required>
+                        <option value="">Etiket seç...</option>
+                        <option selected="@(tag == "İş")">İş</option>
+                        <option selected="@(tag == "Okul")">Okul</option>
+                        <option selected="@(tag == "Sağlık")">Sağlık</option>
+                        <option selected="@(tag == "Kişisel")">Kişisel</option>
+                        <option selected="@(tag == "Diğer")">Diğer</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <label><strong>Açıklama</strong></label><br />
+                    <textarea name="Content" class="form-control" rows="4" required>@desc</textarea>
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <label><strong>Son Tarih</strong></label><br />
+                    <input type="date" name="DueDate" class="form-control"
+                           value="@(Model.Task.DueDate.HasValue ? Model.Task.DueDate.Value.ToString("yyyy-MM-dd") : "")" />
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <label><strong>Tamamlandı mı?</strong></label>
+                    <input type="checkbox" name="Completed" @(Model.Task.Completed ? "checked" : "") />
+                </div>
+
+                <button type="submit" class="btn btn-primary">💾 Güncelle</button>
+                <a href="/MyTasks" class="btn btn-secondary" style="margin-left: 10px;">🔙 Geri Dön</a>
+            </form>
+        }
+    </main>
+</div>

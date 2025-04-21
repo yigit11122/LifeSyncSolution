@@ -94,19 +94,34 @@ namespace LifeSync.Controllers
                 {
                     Guid itemId = Guid.TryParse(item.Id, out var parsed) ? parsed : Guid.NewGuid();
 
-                    if (source == "todoist")
+                    if (source == "todoist" || source == "lifesync-task")
                     {
+                        DateTime? parsedDueDate = null;
+
+                        if (!string.IsNullOrWhiteSpace(item.DueDate) &&
+                            DateTime.TryParse(item.DueDate, out var due))
+                        {
+                            // 1900 öncesi tarih varsa kabul etmeyelim, çoğu zaman default hatadır
+                            if (due.Year >= 1900)
+                                parsedDueDate = DateTime.SpecifyKind(due, DateTimeKind.Local).ToUniversalTime();
+                        }
+
+                        var createdAt = item.CreatedAt.Kind == DateTimeKind.Utc
+                            ? item.CreatedAt
+                            : DateTime.SpecifyKind(item.CreatedAt, DateTimeKind.Local).ToUniversalTime();
+
                         _context.Tasks.Add(new TaskItem
                         {
                             Id = itemId,
                             Content = item.Content,
-                            DueDate = DateTime.TryParse(item.DueDate, out var dt) ? dt.ToUniversalTime() : null,
+                            DueDate = parsedDueDate,
                             Completed = item.Completed,
-                            CreatedAt = item.CreatedAt.ToUniversalTime(),
-                            Source = "todoist",
+                            CreatedAt = createdAt,
+                            Source = source,
                             UserId = userId
                         });
                     }
+
                     else if (source == "notion" || source == "lifesync")
                     {
                         _context.Notes.Add(new Note
@@ -125,7 +140,60 @@ namespace LifeSync.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Sync hatası: {ex.Message}");
+                return StatusCode(500, new { error = $"Sync hatası: {ex.Message}" });
+            }
+        }
+
+        [HttpPut("todoist/complete/{id}")]
+        public async Task<IActionResult> MarkTaskCompleted(Guid id)
+        {
+            try
+            {
+                var task = await _context.Tasks.FirstOrDefaultAsync(t => t.Id == id);
+                if (task == null)
+                    return NotFound();
+
+                task.Completed = true;
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Görev veritabanında tamamlandı." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        [HttpPost("todoist/close/{id}")]
+        public async Task<IActionResult> CloseTodoistTask(string id)
+        {
+            try
+            {
+                var token = await _context.OAuthTokens
+                    .Where(t => t.Source.ToLower() == "todoist")
+                    .OrderByDescending(t => t.ExpiryDate)
+                    .Select(t => t.AccessToken)
+                    .FirstOrDefaultAsync();
+
+                if (string.IsNullOrEmpty(token))
+                    return BadRequest(new { error = "Todoist token bulunamadı." });
+
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+                var response = await client.PostAsync($"https://api.todoist.com/rest/v2/tasks/{id}/close", null);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var detail = await response.Content.ReadAsStringAsync();
+                    return StatusCode((int)response.StatusCode, new { error = "Todoist API hatası", detail });
+                }
+
+                return Ok(new { message = "Todoist'te görev başarıyla tamamlandı." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
             }
         }
 
@@ -137,22 +205,29 @@ namespace LifeSync.Controllers
                 switch (source.ToLower())
                 {
                     case "todoist":
-                        return Ok(await _context.Tasks.Where(t => t.Source == source).ToListAsync());
+                    case "lifesync-task":
+                        return Ok(await _context.Tasks
+                            .Where(t => t.Source.ToLower() == source.ToLower())
+                            .OrderByDescending(t => t.CreatedAt)
+                            .ToListAsync());
+
                     case "notion":
                     case "lifesync":
                         return Ok(await _context.Notes
-                            .Where(n => n.Source == source)
+                            .Where(n => n.Source.ToLower() == source.ToLower())
                             .OrderByDescending(n => n.CreatedAt)
                             .ToListAsync());
+
                     default:
-                        return NotFound("Geçersiz kaynak");
+                        return NotFound(new { error = "Veri çekme hatası: Geçersiz kaynak" });
                 }
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Veri çekme hatası: {ex.Message}");
+                return StatusCode(500, new { error = $"Veri çekme hatası: {ex.Message}" });
             }
         }
+
 
         [HttpGet("get-token")]
         public async Task<IActionResult> GetToken(string source)

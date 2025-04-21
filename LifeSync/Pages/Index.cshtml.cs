@@ -27,6 +27,7 @@ namespace LifeSync.Pages
         public async Task<IActionResult> OnGetFetchData(string source)
         {
             _logger.LogInformation($"Veri çekme isteği alındı: {source ?? "null"}");
+
             if (string.IsNullOrEmpty(source))
                 return new JsonResult(new { error = "Kaynak parametresi eksik" });
 
@@ -39,6 +40,7 @@ namespace LifeSync.Pages
                     "notion" => (await _context.Notes.Where(n => n.Source == source).ToListAsync()).Cast<object>().ToList(),
                     "fitbit" => (await _context.Tasks.Where(t => t.Source == source).ToListAsync()).Cast<object>().ToList(),
                     "lifesync" => (await _context.Notes.Where(n => n.Source == source).ToListAsync()).Cast<object>().ToList(),
+                    "lifesync-task" => (await _context.Tasks.Where(t => t.Source == source).ToListAsync()).Cast<object>().ToList(),
                     _ => throw new Exception("Geçersiz kaynak")
                 };
 

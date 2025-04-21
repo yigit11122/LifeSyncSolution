@@ -13,8 +13,6 @@
 
     <!-- Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-
-    <!-- CSS -->
     <link rel="stylesheet" href="/css/site.css" />
 </head>
 <body>
@@ -24,39 +22,55 @@
             <nav class="nav-links">
                 <a asp-page="/Index">📋 Ana Sayfa</a>
                 <a asp-page="/Privacy">🔒 Gizlilik</a>
-                <a asp-page="/Settings" class="active">⚙️ Ayarlar</a>
+                <a asp-page="/Settings">⚙️ Ayarlar</a>
             </nav>
         </aside>
-
 
         <main class="content">
             <h1>Hoş Geldin 👋</h1>
             <p class="subtitle">Günlük görevlerini ve notlarını buradan yönetebilirsin.</p>
 
             <div class="card-grid">
-                <!-- Todoist -->
+                <!-- ✅ Todoist -->
                 <div class="card">
-                    <h2><span class="section-title">Todoist</span></h2>
+                    <h2>📌 Todoist Görevlerin</h2>
+                    <p>Görevlerinizi Todoist üzerinden senkronize edin ve buradan yönetin.</p>
                     <div class="list" id="todoist-list"></div>
-                    <button id="connect-todoist">🔗 Bağlan</button>
+                    <button class="action-button" id="connect-todoist">
+                        <span class="icon">🔗</span>
+                        <span class="label">Todoist'e Bağlan</span>
+                    </button>
                 </div>
 
-                <!-- Notion -->
+                <!-- ✅ Notion -->
                 <div class="card">
-                    <h2><span class="section-title">Notion Sayfaları</span></h2>
+                    <h2>📚 Notion Notların</h2>
+                    <p>Notion'daki içeriklerinizi senkronize edip buradan görüntüleyin.</p>
                     <div class="list" id="notion-list"></div>
-                    <button id="connect-notion">🔗 Bağlan</button>
+                    <button class="action-button" id="connect-notion">
+                        <span class="icon">🔗</span>
+                        <span class="label">Notion'a Bağlan</span>
+                    </button>
                 </div>
 
-                <!-- LifeSync -->
+                <!-- ✅ LifeSync Notlar -->
                 <div class="card">
-                    <h2><span class="section-title">Benim Notlarım</span></h2>
+                    <h2>📝 Benim Notlarım</h2>
+                    <p>LifeSync içinde oluşturduğun notları düzenlemek için aşağıdan yönetim sayfasına gidebilirsin.</p>
                     <div class="list" id="lifesync-list"></div>
-                    <textarea id="lifesync-input" maxlength="200" placeholder="Yeni not yaz..."></textarea>
-                    <div class="note-footer">
-                        <span id="char-count">0/200</span>
-                        <button id="lifesync-submit">➕ Ekle</button>
-                    </div>
+                    <a href="/MyNotes" class="btn-link">
+                        <span>🛠️ Notları Yönet</span>
+                    </a>
+                </div>
+
+                <!-- ✅ LifeSync Görevler -->
+                <div class="card">
+                    <h2>🧾 LifeSync Görevlerin</h2>
+                    <p>Kendi oluşturduğun görevleri düzenlemek için aşağıdan yönetim sayfasına gidebilirsin.</p>
+                    <div class="list" id="lifesync-task-list"></div>
+                    <a href="/MyTasks" class="btn-link">
+                        <span>🛠️ Görevleri Yönet</span>
+                    </a>
                 </div>
             </div>
         </main>
@@ -75,7 +89,7 @@
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 const urlParams = new URLSearchParams(window.location.search);
-                const sources = ['todoist', 'notion', 'lifesync'];
+                const sources = ['todoist', 'notion', 'lifesync', 'lifesync-task'];
 
                 if (urlParams.get('source') === 'todoist' && urlParams.get('code')) {
                     fetchTodoistTasks().then(tasks => {
@@ -93,12 +107,6 @@
                     fetchDataFromBackend(source).then(data => {
                         if (data) displayData(data, source);
                     });
-                });
-
-                const input = document.getElementById("lifesync-input");
-                const count = document.getElementById("char-count");
-                input.addEventListener("input", () => {
-                    count.innerText = `${input.value.length}/200`;
                 });
             });
         </script>

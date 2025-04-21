@@ -5,6 +5,7 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// Markdown'ı temizle
 function removeMarkdown(text) {
     return text
         .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
@@ -25,7 +26,7 @@ async function saveToBackend(items, source) {
                     Source: source
                 };
 
-                if (source === "todoist") {
+                if (source === "todoist" || source === "lifesync-task") {
                     base.DueDate = item.dueDate ? new Date(item.dueDate).toISOString() : null;
                     base.StartDate = item.startDate ? new Date(item.startDate).toISOString() : null;
                     base.Completed = item.completed ?? false;
@@ -35,22 +36,14 @@ async function saveToBackend(items, source) {
             })
         };
 
-        console.log("Gönderilen veri:", requestBody);
-
         const response = await fetch('/api/sync', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(requestBody)
         });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`Sync başarısız: ${response.status} - ${errorText}`);
-            throw new Error(errorText);
-        }
-
-        const result = await response.json();
-        console.log('Sync başarılı:', result);
+        if (!response.ok) throw new Error(await response.text());
+        console.log('Sync başarılı:', await response.json());
     } catch (error) {
         console.error('Sync hatası:', error.message);
     }
@@ -65,29 +58,41 @@ async function fetchDataFromBackend(source) {
         console.log(`${source} verileri alındı:`, data);
         return data;
     } catch (error) {
-        console.error(`${source} çekme hatası:`, error);
+        console.error(`${source} veri çekme hatası:`, error);
         return null;
     }
 }
 
-// Veriyi temizle, filtrele
+// Sadece veritabanı için tamamla
+async function markTaskAsCompleted(id) {
+    try {
+        const res = await fetch(`/api/todoist/complete/${id}`, { method: 'PUT' });
+        if (!res.ok) throw new Error(await res.text());
+        console.log(`Görev ${id} tamamlandı (veritabanı)`);
+
+        const updated = await fetchDataFromBackend("todoist");
+        if (updated) displayData(updated, "todoist");
+    } catch (err) {
+        console.error("Tamamlama hatası:", err.message);
+    }
+}
+
+// Görevleri işle
 function preprocessTasks(data, source) {
     if (!Array.isArray(data)) {
         console.error(`${source} verisi geçersiz:`, data);
         return [];
     }
 
-    if (source === 'todoist') {
-        return data
-            .filter(task => task.is_completed === false)
-            .map(task => ({
-                id: task.id,
-                content: removeMarkdown(task.content || 'No Title'),
-                dueDate: task.due?.date ? new Date(task.due.date).toISOString() : null,
-                completed: false,
-                createdAt: task.created_at ? new Date(task.created_at).toISOString() : new Date().toISOString(),
-                source: 'todoist'
-            }));
+    if (source === 'todoist' || source === 'lifesync-task') {
+        return data.map(task => ({
+            id: task.id,
+            content: removeMarkdown(task.content || 'No Title'),
+            dueDate: task.dueDate || task.due?.date || null,
+            completed: task.completed ?? false,
+            createdAt: task.createdAt || task.created_at || new Date().toISOString(),
+            source: source
+        }));
     }
 
     if (source === 'notion') {
@@ -104,41 +109,50 @@ function preprocessTasks(data, source) {
 
 // Verileri grupla
 function organizeData(data, source) {
-    if (source === 'todoist') {
+    if (source === 'todoist' || source === 'lifesync-task') {
         return {
             activeTasks: data.filter(t => !t.completed),
             completedTasks: data.filter(t => t.completed)
         };
     }
+
     if (source === 'notion') {
         return { pages: data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) };
     }
+
     return data;
 }
 
-// Verileri ekrana bas
+// Gösterim
 function displayData(data, source) {
     const container = document.getElementById(`${source}-list`);
-    if (!container) {
-        console.error(`📛 '${source}-list' bulunamadı.`);
-        return;
-    }
+    if (!container) return;
 
     const organized = organizeData(data, source);
     container.innerHTML = '';
 
-    if (source === 'todoist') {
+    if (source === 'todoist' || source === 'lifesync-task') {
         if (organized.activeTasks.length > 0) {
-            container.innerHTML += `<h3>Aktif Görevler</h3><ul>${organized.activeTasks.map(t => `<li>${escapeHtml(t.content)}</li>`).join('')}</ul>`;
+            const listHtml = organized.activeTasks.map(t => `
+                <li>
+                    <input type="checkbox" onchange="markTaskAsCompleted('${t.id}')" />
+                    <span>${escapeHtml(t.content)}</span>
+                </li>
+            `).join('');
+            container.innerHTML += `<h3>Aktif Görevler</h3><ul>${listHtml}</ul>`;
         }
+
         if (organized.completedTasks.length > 0) {
-            container.innerHTML += `<h3>Tamamlanan Görevler</h3><ul>${organized.completedTasks.map(t => `<li>${escapeHtml(t.content)}</li>`).join('')}</ul>`;
+            const listHtml = organized.completedTasks.map(t => `
+                <li><span style="text-decoration: line-through; color: #888;">${escapeHtml(t.content)}</span></li>
+            `).join('');
+            container.innerHTML += `<h3>Tamamlanan Görevler</h3><ul>${listHtml}</ul>`;
         }
     }
 
     if (source === 'notion') {
         if (organized.pages?.length > 0) {
-            container.innerHTML += `<h3>Notion Sayfaları</h3><ul>${organized.pages.map(p => `<li>${escapeHtml(p.content)}</li>`).join('')}</ul>`;
+            container.innerHTML += `<h3>Notion Notların</h3><ul>${organized.pages.map(p => `<li>${escapeHtml(p.content)}</li>`).join('')}</ul>`;
         }
     }
 
@@ -149,11 +163,9 @@ function displayData(data, source) {
             container.innerHTML = "<p>Henüz not yok.</p>";
         }
     }
-
-    console.log(`${source} verileri ekrana basıldı:`, organized);
 }
 
-// Manuel not ekleme
+// Yeni not kaydet
 async function saveNewNote() {
     const content = document.getElementById("note-content").value.trim();
     const status = document.getElementById("note-status");
@@ -166,16 +178,14 @@ async function saveNewNote() {
     try {
         const requestBody = {
             Source: "lifesync",
-            Data: [
-                {
-                    Id: crypto.randomUUID(),
-                    Content: content,
-                    CreatedAt: new Date().toISOString(),
-                    DueDate: null,
-                    StartDate: null,
-                    Completed: false
-                }
-            ]
+            Data: [{
+                Id: crypto.randomUUID(),
+                Content: content,
+                CreatedAt: new Date().toISOString(),
+                DueDate: null,
+                StartDate: null,
+                Completed: false
+            }]
         };
 
         const response = await fetch('/api/sync', {

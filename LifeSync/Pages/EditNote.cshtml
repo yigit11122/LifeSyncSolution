@@ -1,0 +1,43 @@
+﻿@page
+@model LifeSync.Pages.EditNoteModel
+@{
+    ViewData["Title"] = "Not Düzenle";
+}
+
+<div class="layout">
+    <aside class="sidebar">
+        <div class="logo">🧠 <span>LifeSync</span></div>
+        <nav class="nav-links">
+            <a asp-page="/Index">📋 Ana Sayfa</a>
+            <a asp-page="/Privacy">🔒 Gizlilik</a>
+            <a asp-page="/Settings">⚙️ Ayarlar</a>
+            <a asp-page="/MyNotes">🗂️ Notlarım</a>
+        </nav>
+    </aside>
+
+    <main class="content">
+        <h1>✏️ Notu Düzenle</h1>
+
+        <form method="post">
+            <input type="hidden" asp-for="Note.Id" />
+
+            <div class="form-group">
+                <label>Başlık</label>
+                <input type="text" class="form-control" name="Title" value="@Model.Title" required />
+            </div>
+
+            <div class="form-group">
+                <label>Etiketler</label>
+                <input type="text" class="form-control" name="Tags" value="@Model.Tags" placeholder="Virgülle ayır (örn: kişisel, proje)" />
+            </div>
+
+            <div class="form-group">
+                <label>İçerik</label>
+                <textarea class="form-control" name="Body" rows="5">@Model.Body</textarea>
+            </div>
+
+            <button type="submit" class="btn-link">💾 Kaydet</button>
+            <a asp-page="/MyNotes" class="btn-link" style="background-color: #6c757d;">↩️ Geri Dön</a>
+        </form>
+    </main>
+</div>

@@ -23,6 +23,7 @@
         .layout {
             display: flex;
             min-height: 100vh;
+            width: 100%;
         }
 
         .sidebar {
@@ -60,6 +61,7 @@
             flex-grow: 1;
             padding: 40px;
             background-color: #ecf0f3;
+            width: calc(100% - 250px); /* sidebar'dan kalan alanı kapla */
         }
 
         .hidden-navbar {
@@ -68,7 +70,7 @@
     </style>
 </head>
 <body>
-    <!-- Bu navbar görünmesin istiyorsan aşağıya 'hidden-navbar' sınıfı eklendi -->
+    <!-- Gizli üst navbar (mobil için) -->
     <header class="hidden-navbar">
         <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container">
@@ -86,7 +88,7 @@
                             <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">🔒 Gizlilik</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Settings">⚙️ Ayarlar</a> <!-- ✅ Eklendi -->
+                            <a class="nav-link text-dark" asp-area="" asp-page="/Settings">⚙️ Ayarlar</a>
                         </li>
                     </ul>
                 </div>
@@ -94,7 +96,7 @@
         </nav>
     </header>
 
-    <!-- Main Layout Alanı -->
+    <!-- Geniş ekran düzeni -->
     <div class="layout">
         @RenderBody()
     </div>
