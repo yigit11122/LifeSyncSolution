@@ -1,4 +1,4 @@
-﻿//HTML injection'a karşı güvenli gösterim
+﻿// HTML injection'a karşı güvenli gösterim
 function escapeHtml(text) {
     const div = document.createElement("div");
     div.textContent = text;
@@ -7,12 +7,12 @@ function escapeHtml(text) {
 
 function removeMarkdown(text) {
     return text
-        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') 
-        .replace(/[_*~`>#-]/g, '')               // özel karakterleri temizle
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+        .replace(/[_*~>#-]/g, '')
         .trim();
 }
 
-//Veriyi backend'e gönder
+// Veriyi backend'e gönder
 async function saveToBackend(items, source) {
     try {
         const requestBody = {
@@ -30,7 +30,6 @@ async function saveToBackend(items, source) {
                     base.StartDate = item.startDate ? new Date(item.startDate).toISOString() : null;
                     base.Completed = item.completed ?? false;
                 }
-
 
                 return base;
             })
@@ -57,8 +56,7 @@ async function saveToBackend(items, source) {
     }
 }
 
-
-//Backend'den veri çek
+// Backend'den veri çek
 async function fetchDataFromBackend(source) {
     try {
         const response = await fetch(`/Index?handler=FetchData&source=${source}`, { credentials: 'include' });
@@ -72,7 +70,7 @@ async function fetchDataFromBackend(source) {
     }
 }
 
-//Veriyi normalize et + filtrele + temizle
+// Veriyi temizle, filtrele
 function preprocessTasks(data, source) {
     if (!Array.isArray(data)) {
         console.error(`${source} verisi geçersiz:`, data);
@@ -81,7 +79,7 @@ function preprocessTasks(data, source) {
 
     if (source === 'todoist') {
         return data
-            .filter(task => task.is_completed === false) // sadece aktif görevler
+            .filter(task => task.is_completed === false)
             .map(task => ({
                 id: task.id,
                 content: removeMarkdown(task.content || 'No Title'),
@@ -101,11 +99,10 @@ function preprocessTasks(data, source) {
         }));
     }
 
-    // Diğer kaynaklar 
     return data;
 }
 
-//Verileri türüne göre gruplandır
+// Verileri grupla
 function organizeData(data, source) {
     if (source === 'todoist') {
         return {
@@ -119,7 +116,7 @@ function organizeData(data, source) {
     return data;
 }
 
-//Verileri HTML'e bas
+// Verileri ekrana bas
 function displayData(data, source) {
     const container = document.getElementById(`${source}-list`);
     if (!container) {
@@ -156,6 +153,7 @@ function displayData(data, source) {
     console.log(`${source} verileri ekrana basıldı:`, organized);
 }
 
+// Manuel not ekleme
 async function saveNewNote() {
     const content = document.getElementById("note-content").value.trim();
     const status = document.getElementById("note-status");

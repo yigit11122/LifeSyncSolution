@@ -28,35 +28,19 @@ namespace LifeSync.Pages
         {
             _logger.LogInformation($"Veri çekme isteği alındı: {source ?? "null"}");
             if (string.IsNullOrEmpty(source))
-            {
-                _logger.LogWarning("Kaynak parametresi eksik.");
                 return new JsonResult(new { error = "Kaynak parametresi eksik" });
-            }
 
             try
             {
-                List<object> data = new List<object>();
-                switch (source.ToLower())
+                List<object> data = source.ToLower() switch
                 {
-                    case "todoist":
-                        data = (await _context.Tasks.Where(t => t.Source == source).ToListAsync()).Cast<object>().ToList();
-                        break;
-                    case "googlecalendar":
-                        data = (await _context.Events.Where(e => e.Source == source).ToListAsync()).Cast<object>().ToList();
-                        break;
-                    case "notion":
-                        data = (await _context.Notes.Where(n => n.Source == source).ToListAsync()).Cast<object>().ToList();
-                        break;
-                    case "fitbit":
-                        data = (await _context.Tasks.Where(t => t.Source == source).ToListAsync()).Cast<object>().ToList();
-                        break;
-                    case "lifesync":
-                        data = (await _context.Notes.Where(n => n.Source == source).ToListAsync()).Cast<object>().ToList(); 
-                        break;
-                    default:
-                        _logger.LogWarning($"Geçersiz veri kaynağı: {source}");
-                        return new JsonResult(new { error = "Geçersiz kaynak" });
-                }
+                    "todoist" => (await _context.Tasks.Where(t => t.Source == source).ToListAsync()).Cast<object>().ToList(),
+                    "googlecalendar" => (await _context.Events.Where(e => e.Source == source).ToListAsync()).Cast<object>().ToList(),
+                    "notion" => (await _context.Notes.Where(n => n.Source == source).ToListAsync()).Cast<object>().ToList(),
+                    "fitbit" => (await _context.Tasks.Where(t => t.Source == source).ToListAsync()).Cast<object>().ToList(),
+                    "lifesync" => (await _context.Notes.Where(n => n.Source == source).ToListAsync()).Cast<object>().ToList(),
+                    _ => throw new Exception("Geçersiz kaynak")
+                };
 
                 _logger.LogInformation($"{source} verileri çekildi: {data.Count} kayıt.");
                 return new JsonResult(data);

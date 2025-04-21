@@ -1,0 +1,45 @@
+﻿@page
+@model LifeSync.Pages.SettingsModel
+@{
+    ViewData["Title"] = "Ayarlar";
+}
+
+<div class="layout">
+    <aside class="sidebar">
+        <div class="logo">🧠 <span>LifeSync</span></div>
+        <nav class="nav-links">
+            <a asp-page="/Index">📋 Ana Sayfa</a>
+            <a asp-page="/Privacy">🔒 Gizlilik</a>
+            <a asp-page="/Settings" class="active">⚙️ Ayarlar</a>
+        </nav>
+    </aside>
+
+    <main class="content">
+        <h1>⚙️ Hesap Bağlantıları</h1>
+        <p class="subtitle">Aşağıdan bağlı olduğun servisleri ve bağlantı bilgilerini görebilirsin.</p>
+
+        <div class="card-grid">
+            @foreach (var source in Model.IntegrationStatuses.Keys)
+            {
+                var status = Model.IntegrationStatuses[source];
+                <div class="card">
+                    <h2>@(source.ToUpper())</h2>
+
+                    @if (status.IsConnected)
+                    {
+                        <p><strong>Durum:</strong> Bağlı ✅</p>
+                        <p><strong>Bağlanma Zamanı:</strong> @status.ConnectedAt?.ToLocalTime().ToString("f")</p>
+                        <p><strong>Token Süresi:</strong> @status.ExpiryDate?.ToLocalTime().ToString("f")</p>
+                    }
+                    else
+                    {
+                        <p><strong>Durum:</strong> Bağlı Değil ❌</p>
+                        <p><em>Bu servis ile henüz bağlantı kurulmamış.</em></p>
+                    }
+
+                    <a href="/auth/@source/connect?state=settings" class="btn-link">🔄 Yeniden Bağlan</a>
+                </div>
+            }
+        </div>
+    </main>
+</div>

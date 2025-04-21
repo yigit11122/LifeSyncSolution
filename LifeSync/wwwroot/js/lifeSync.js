@@ -1,13 +1,9 @@
 ﻿async function saveLifeSyncNote(content) {
-    // lifesync.js
     const note = {
         id: crypto.randomUUID(),
         content: content,
         createdAt: new Date().toISOString()
     };
-
-
-
 
     const requestBody = {
         Source: "lifesync",
@@ -36,8 +32,7 @@ async function loadLifeSyncNotes() {
         const notes = await res.json();
 
         const container = document.getElementById("lifesync-list");
-        container.innerHTML = `<h3>Benim Notlarım</h3><ul>${notes.map(n => `<li>${n.content}</li>`).join('')
-            }</ul>`;
+        container.innerHTML = `<h3>Benim Notlarım</h3><ul>${notes.map(n => `<li>${n.content}</li>`).join('')}</ul>`;
     } catch (err) {
         console.error("Notlar yüklenemedi:", err.message);
     }

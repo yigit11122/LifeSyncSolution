@@ -1,25 +1,24 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using backend.models;
-using Npgsql.EntityFrameworkCore.PostgreSQL; // 🔥 Burası kritik
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Razor Pages, Controller, Swagger, API Explorer
 builder.Services.AddControllers();
 builder.Services.AddRazorPages();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// 🌐 PostgreSQL bağlantısı
+// PostgreSQL bağlantısı
 var connectionString = builder.Configuration.GetConnectionString("LifeSyncDbContext")
     ?? throw new InvalidOperationException("Connection string 'LifeSyncDbContext' not found.");
 
 builder.Services.AddDbContext<LifeSyncDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-
-// 🌐 CORS ayarları
+// CORS (her yerden gelen isteklere izin)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -43,13 +42,12 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.MapControllers();
-
 app.UseRouting();
 app.UseCors("AllowAll");
 app.UseAuthorization();
-
 app.MapRazorPages();
 
+// DB bağlantısı test logu
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<LifeSyncDbContext>();
@@ -70,7 +68,5 @@ using (var scope = app.Services.CreateScope())
 
 app.Run();
 
-if(null==null)
-{
-
-}
+// bonus içindeki bonus
+if (null == null) { }

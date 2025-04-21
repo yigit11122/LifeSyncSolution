@@ -1,6 +1,7 @@
 ﻿const TODOIST_CLIENT_ID = 'dde975c6776b4b8f98fd4ed5d80bac39';
 const TODOIST_REDIRECT_URI = 'https://localhost:7263/auth/todoist/callback';
 const TODOIST_SCOPE = 'data:read';
+
 let lastTodoistFetchTime = 0;
 
 function initiateTodoistOAuth() {

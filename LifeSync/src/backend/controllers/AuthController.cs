@@ -113,47 +113,31 @@ namespace LifeSync.Controllers
             var tokenData = await response.Content.ReadAsStringAsync();
             Console.WriteLine($"Token alındı: {tokenData}");
 
-            // Düzeltme: JSON'ı JsonDocument ile ayrıştır
             using var jsonDoc = System.Text.Json.JsonDocument.Parse(tokenData);
             var root = jsonDoc.RootElement;
 
-            if (!root.TryGetProperty("access_token", out var accessTokenElement) || accessTokenElement.ValueKind != System.Text.Json.JsonValueKind.String)
-            {
-                Console.WriteLine("Token parse hatası: access_token bulunamadı.");
-                return StatusCode(500, "Token parse hatası");
-            }
+            if (!root.TryGetProperty("access_token", out var accessTokenElement))
+                return StatusCode(500, "access_token bulunamadı.");
 
             var accessToken = accessTokenElement.GetString();
-            string? refreshToken = null;
-            if (root.TryGetProperty("refresh_token", out var refreshTokenElement) && refreshTokenElement.ValueKind == System.Text.Json.JsonValueKind.String)
-            {
-                refreshToken = refreshTokenElement.GetString();
-            }
-
-            int expiresIn = 3600; // Varsayılan 1 saat
-            if (root.TryGetProperty("expires_in", out var expiresInElement) && expiresInElement.ValueKind == System.Text.Json.JsonValueKind.Number)
-            {
-                expiresIn = expiresInElement.GetInt32();
-            }
-
+            string? refreshToken = root.TryGetProperty("refresh_token", out var rt) ? rt.GetString() : null;
+            int expiresIn = root.TryGetProperty("expires_in", out var ei) ? ei.GetInt32() : 3600;
             var expiryDate = DateTime.UtcNow.AddSeconds(expiresIn);
 
             try
             {
-                using (var scope = this.HttpContext.RequestServices.CreateScope())
+                using var scope = this.HttpContext.RequestServices.CreateScope();
+                var context = scope.ServiceProvider.GetRequiredService<LifeSyncDbContext>();
+                context.OAuthTokens.Add(new OAuthToken
                 {
-                    var context = scope.ServiceProvider.GetRequiredService<LifeSyncDbContext>();
-                    context.OAuthTokens.Add(new OAuthToken
-                    {
-                        Source = source,
-                        AccessToken = accessToken,
-                        RefreshToken = refreshToken,
-                        ExpiryDate = expiryDate,
-                        UserId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48")
-                    });
-                    await context.SaveChangesAsync();
-                    Console.WriteLine("Token veritabanına başarıyla kaydedildi.");
-                }
+                    Source = source,
+                    AccessToken = accessToken,
+                    RefreshToken = refreshToken,
+                    ExpiryDate = expiryDate,
+                    UserId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48") // 🔐 hardcoded user ID (örnek)
+                });
+                await context.SaveChangesAsync();
+                Console.WriteLine("Token veritabanına başarıyla kaydedildi.");
             }
             catch (Exception ex)
             {
@@ -162,8 +146,6 @@ namespace LifeSync.Controllers
             }
 
             Response.Cookies.Append("session", "user-session-id", new CookieOptions { HttpOnly = true });
-
-            // Yetkilendirme sonrası Index sayfasına source ve code parametreleriyle yönlendirme
             var redirectUrl = $"/?source={source}&code={code}&state={state}";
             return Redirect(redirectUrl);
         }

@@ -4,73 +4,104 @@
     ViewData["Title"] = "LifeSync";
 }
 
-<div class="layout">
-    <aside class="sidebar">
-        <div class="logo">🧠 LifeSync</div>
-        <nav>
-            <a href="/Index">📋 Ana Sayfa</a>
-            <a href="/Privacy">🔒 Gizlilik</a>
-            <a href="#">⚙️ Ayarlar</a>
-        </nav>
-    </aside>
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
 
-    <main class="content">
-        <h1>Hoş Geldin 👋</h1>
-        <p class="subtitle">Günlük görevlerini ve notlarını buradan yönetebilirsin.</p>
+    <!-- Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
-        <div class="card-grid">
-            <div class="card">
-                <h2>Todoist</h2>
-                <ul id="todoist-list"></ul>
-                <button id="connect-todoist">🔗 Bağlan</button>
-            </div>
+    <!-- CSS -->
+    <link rel="stylesheet" href="/css/site.css" />
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="logo">🧠 <span>LifeSync</span></div>
+            <nav class="nav-links">
+                <a asp-page="/Index">📋 Ana Sayfa</a>
+                <a asp-page="/Privacy">🔒 Gizlilik</a>
+                <a asp-page="/Settings" class="active">⚙️ Ayarlar</a>
+            </nav>
+        </aside>
 
-            <div class="card">
-                <h2>Notion</h2>
-                <ul id="notion-list"></ul>
-                <button id="connect-notion">🔗 Bağlan</button>
-            </div>
 
-            <div class="card">
-                <h2>Notlarım</h2>
-                <ul id="lifesync-list"></ul>
-                <textarea id="lifesync-input" maxlength="200" placeholder="Yeni not yaz..."></textarea>
-                <div class="note-footer">
-                    <span id="char-count">0/200</span>
-                    <button id="lifesync-submit">➕ Ekle</button>
+        <main class="content">
+            <h1>Hoş Geldin 👋</h1>
+            <p class="subtitle">Günlük görevlerini ve notlarını buradan yönetebilirsin.</p>
+
+            <div class="card-grid">
+                <!-- Todoist -->
+                <div class="card">
+                    <h2><span class="section-title">Todoist</span></h2>
+                    <div class="list" id="todoist-list"></div>
+                    <button id="connect-todoist">🔗 Bağlan</button>
+                </div>
+
+                <!-- Notion -->
+                <div class="card">
+                    <h2><span class="section-title">Notion Sayfaları</span></h2>
+                    <div class="list" id="notion-list"></div>
+                    <button id="connect-notion">🔗 Bağlan</button>
+                </div>
+
+                <!-- LifeSync -->
+                <div class="card">
+                    <h2><span class="section-title">Benim Notlarım</span></h2>
+                    <div class="list" id="lifesync-list"></div>
+                    <textarea id="lifesync-input" maxlength="200" placeholder="Yeni not yaz..."></textarea>
+                    <div class="note-footer">
+                        <span id="char-count">0/200</span>
+                        <button id="lifesync-submit">➕ Ekle</button>
+                    </div>
                 </div>
             </div>
-        </div>
-    </main>
-</div>
+        </main>
+    </div>
 
-@section Scripts {
-    <script>
-        window.FETCH_INTERVAL = 60000;
+    @section Scripts {
+        <script>
+            window.FETCH_INTERVAL = 60000;
+        </script>
 
-        document.addEventListener("DOMContentLoaded", () => {
-            const sources = ['todoist', 'notion', 'lifesync'];
+        <script src="/js/site.js"></script>
+        <script src="/js/todoist.js"></script>
+        <script src="/js/notion.js"></script>
+        <script src="/js/lifeSync.js"></script>
 
-            for (const source of sources) {
-                fetch(`/Index?handler=FetchData&source=${source}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        const limited = data.slice(0, 2); // sadece ilk 2 içerik göster
-                        displayData(limited, source);
-                    })
-                    .catch(err => console.error(`${source} veri çekme hatası:`, err));
-            }
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const urlParams = new URLSearchParams(window.location.search);
+                const sources = ['todoist', 'notion', 'lifesync'];
 
-            const input = document.getElementById("lifesync-input");
-            const count = document.getElementById("char-count");
-            input.addEventListener("input", () => {
-                count.innerText = `${input.value.length}/200`;
+                if (urlParams.get('source') === 'todoist' && urlParams.get('code')) {
+                    fetchTodoistTasks().then(tasks => {
+                        if (tasks) displayData(tasks, 'todoist');
+                    });
+                }
+
+                if (urlParams.get('source') === 'notion' && urlParams.get('code')) {
+                    fetchNotionPages().then(pages => {
+                        if (pages) displayData(pages, 'notion');
+                    });
+                }
+
+                sources.forEach(source => {
+                    fetchDataFromBackend(source).then(data => {
+                        if (data) displayData(data, source);
+                    });
+                });
+
+                const input = document.getElementById("lifesync-input");
+                const count = document.getElementById("char-count");
+                input.addEventListener("input", () => {
+                    count.innerText = `${input.value.length}/200`;
+                });
             });
-        });
-    </script>
-
-    <script src="/js/site.js"></script>
-    <script src="/js/lifeSync.js"></script>
-    <script src="/js/todoist.js"></script>
-    <script src="/js/notion.js"></script>
-}
+        </script>
+    }
+</body>
+</html>

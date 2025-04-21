@@ -59,37 +59,7 @@ namespace LifeSync.Controllers
         [HttpGet("notion/fetch")]
         public async Task<IActionResult> FetchNotionDataDirect()
         {
-            try
-            {
-                var accessToken = await _context.OAuthTokens
-                    .Where(t => t.Source.ToLower() == "notion")
-                    .OrderByDescending(t => t.ExpiryDate)
-                    .Select(t => t.AccessToken)
-                    .FirstOrDefaultAsync();
-
-                if (string.IsNullOrEmpty(accessToken))
-                    return NotFound(new { error = "Notion token bulunamadı." });
-
-                using var client = new HttpClient();
-                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
-                client.DefaultRequestHeaders.Add("Notion-Version", "2022-06-28");
-
-                var databaseId = "1c0b360d762580278f1cc03200fed541";
-                var notionResponse = await client.PostAsync($"https://api.notion.com/v1/databases/{databaseId}/query", null);
-
-                if (!notionResponse.IsSuccessStatusCode)
-                {
-                    var error = await notionResponse.Content.ReadAsStringAsync();
-                    return StatusCode((int)notionResponse.StatusCode, new { error = "Notion API hatası", detail = error });
-                }
-
-                var rawData = await notionResponse.Content.ReadAsStringAsync();
-                return Ok(new { data = rawData });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = "Sunucu hatası", detail = ex.Message });
-            }
+            return await FetchNotionData();
         }
 
         [HttpPost("sync")]
@@ -103,11 +73,7 @@ namespace LifeSync.Controllers
                 var source = request.Source?.ToLowerInvariant() ?? "";
                 Guid userId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48");
 
-                if (source == "lifesync")
-                {
-                    userId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48");
-                }
-                else if (source == "todoist" || source == "notion")
+                if (source == "todoist" || source == "notion")
                 {
                     var tokenUserId = await _context.OAuthTokens
                         .Where(t => t.Source.ToLower() == source)
@@ -120,20 +86,13 @@ namespace LifeSync.Controllers
                 }
 
                 if (source == "todoist")
-                {
-                    var eski = _context.Tasks.Where(t => t.Source == source && t.UserId == userId);
-                    _context.Tasks.RemoveRange(eski);
-                }
+                    _context.Tasks.RemoveRange(_context.Tasks.Where(t => t.Source == source && t.UserId == userId));
                 else if (source == "notion")
-                {
-                    var eski = _context.Notes.Where(n => n.Source == source && n.UserId == userId);
-                    _context.Notes.RemoveRange(eski);
-                }
+                    _context.Notes.RemoveRange(_context.Notes.Where(n => n.Source == source && n.UserId == userId));
 
                 foreach (var item in request.Data)
                 {
-                    if (!Guid.TryParse(item.Id, out Guid itemId))
-                        itemId = Guid.NewGuid();
+                    Guid itemId = Guid.TryParse(item.Id, out var parsed) ? parsed : Guid.NewGuid();
 
                     if (source == "todoist")
                     {
@@ -179,14 +138,12 @@ namespace LifeSync.Controllers
                 {
                     case "todoist":
                         return Ok(await _context.Tasks.Where(t => t.Source == source).ToListAsync());
-
                     case "notion":
                     case "lifesync":
                         return Ok(await _context.Notes
                             .Where(n => n.Source == source)
                             .OrderByDescending(n => n.CreatedAt)
                             .ToListAsync());
-
                     default:
                         return NotFound("Geçersiz kaynak");
                 }
