@@ -127,7 +127,6 @@ async function loadLifeSyncTasks() {
     }
 }
 
-////================== EVENT BINDINGS ==================////
 
 document.addEventListener("DOMContentLoaded", () => {
     loadLifeSyncNotes();

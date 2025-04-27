@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text; // 🔥 BURAYI EKLEDİYORUM: AI için HTTP POST sırasında gerekli
 using System.Threading.Tasks;
 
 namespace LifeSync.Controllers
@@ -101,7 +102,6 @@ namespace LifeSync.Controllers
                         if (!string.IsNullOrWhiteSpace(item.DueDate) &&
                             DateTime.TryParse(item.DueDate, out var due))
                         {
-                            // 1900 öncesi tarih varsa kabul etmeyelim, çoğu zaman default hatadır
                             if (due.Year >= 1900)
                                 parsedDueDate = DateTime.SpecifyKind(due, DateTimeKind.Local).ToUniversalTime();
                         }
@@ -121,7 +121,6 @@ namespace LifeSync.Controllers
                             UserId = userId
                         });
                     }
-
                     else if (source == "notion" || source == "lifesync")
                     {
                         _context.Notes.Add(new Note
@@ -228,7 +227,6 @@ namespace LifeSync.Controllers
             }
         }
 
-
         [HttpGet("get-token")]
         public async Task<IActionResult> GetToken(string source)
         {
@@ -250,6 +248,30 @@ namespace LifeSync.Controllers
                 return StatusCode(500, new { error = $"Token getirme hatası: {ex.Message}" });
             }
         }
+
+        // 🔥 BURAYI YENİ EKLEDİK: AI Server ile haberleşme
+        [HttpPost("ai-suggest")]
+        public async Task<IActionResult> GetAISuggestion([FromBody] AIRequest request)
+        {
+            try
+            {
+                using var client = new HttpClient();
+                var aiResponse = await client.PostAsync("http://127.0.0.1:5001/suggest",
+                    new StringContent(System.Text.Json.JsonSerializer.Serialize(request), Encoding.UTF8, "application/json"));
+
+                if (!aiResponse.IsSuccessStatusCode)
+                {
+                    return StatusCode((int)aiResponse.StatusCode, "AI server hatası");
+                }
+
+                var result = await aiResponse.Content.ReadAsStringAsync();
+                return Content(result, "application/json");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
     }
 
     public class SyncDataRequest
@@ -266,5 +288,13 @@ namespace LifeSync.Controllers
         public string? DueDate { get; set; }
         public string? StartDate { get; set; }
         public bool Completed { get; set; }
+    }
+
+    // 🔥 BURAYI YENİ EKLEDİK: AI Request modeli
+    public class AIRequest
+    {
+        public string Task { get; set; } = "";
+        public string Description { get; set; } = "";
+        public string Category { get; set; } = "";
     }
 }
