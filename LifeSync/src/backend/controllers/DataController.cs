@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Text; // 🔥 BURAYI EKLEDİYORUM: AI için HTTP POST sırasında gerekli
+using System.Text; // 🔥 HTTP POST için gerekli
 using System.Threading.Tasks;
 
 namespace LifeSync.Controllers
@@ -98,9 +98,7 @@ namespace LifeSync.Controllers
                     if (source == "todoist" || source == "lifesync-task")
                     {
                         DateTime? parsedDueDate = null;
-
-                        if (!string.IsNullOrWhiteSpace(item.DueDate) &&
-                            DateTime.TryParse(item.DueDate, out var due))
+                        if (!string.IsNullOrWhiteSpace(item.DueDate) && DateTime.TryParse(item.DueDate, out var due))
                         {
                             if (due.Year >= 1900)
                                 parsedDueDate = DateTime.SpecifyKind(due, DateTimeKind.Local).ToUniversalTime();
@@ -209,14 +207,12 @@ namespace LifeSync.Controllers
                             .Where(t => t.Source.ToLower() == source.ToLower())
                             .OrderByDescending(t => t.CreatedAt)
                             .ToListAsync());
-
                     case "notion":
                     case "lifesync":
                         return Ok(await _context.Notes
                             .Where(n => n.Source.ToLower() == source.ToLower())
                             .OrderByDescending(n => n.CreatedAt)
                             .ToListAsync());
-
                     default:
                         return NotFound(new { error = "Veri çekme hatası: Geçersiz kaynak" });
                 }
@@ -249,13 +245,16 @@ namespace LifeSync.Controllers
             }
         }
 
-        // 🔥 BURAYI YENİ EKLEDİK: AI Server ile haberleşme
+        // 🔥 YENİ: AI öneri endpointi
         [HttpPost("ai-suggest")]
         public async Task<IActionResult> GetAISuggestion([FromBody] AIRequest request)
         {
             try
             {
-                using var client = new HttpClient();
+                var handler = new HttpClientHandler();
+                handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true; // 🔥 SSL doğrulama kapalı
+
+                using var client = new HttpClient(handler);
                 var aiResponse = await client.PostAsync("http://127.0.0.1:5001/suggest",
                     new StringContent(System.Text.Json.JsonSerializer.Serialize(request), Encoding.UTF8, "application/json"));
 
@@ -272,8 +271,10 @@ namespace LifeSync.Controllers
                 return StatusCode(500, new { error = ex.Message });
             }
         }
+
     }
 
+    // 🔥 Kullanılan Modeller
     public class SyncDataRequest
     {
         public string Source { get; set; } = string.Empty;
@@ -290,7 +291,6 @@ namespace LifeSync.Controllers
         public bool Completed { get; set; }
     }
 
-    // 🔥 BURAYI YENİ EKLEDİK: AI Request modeli
     public class AIRequest
     {
         public string Task { get; set; } = "";
