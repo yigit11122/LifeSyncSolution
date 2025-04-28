@@ -53,21 +53,6 @@ namespace LifeSync.Migrations
             migrationBuilder.DropTable(
                 name: "OAuthTokens",
                 schema: "public");
-
-            migrationBuilder.RenameTable(
-                name: "Tasks",
-                schema: "public",
-                newName: "Tasks");
-
-            migrationBuilder.RenameTable(
-                name: "Notes",
-                schema: "public",
-                newName: "Notes");
-
-            migrationBuilder.RenameTable(
-                name: "Events",
-                schema: "public",
-                newName: "Events");
         }
     }
 }

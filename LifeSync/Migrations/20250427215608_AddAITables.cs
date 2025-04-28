@@ -1,8 +1,6 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
-
 #nullable disable
-
 namespace LifeSync.Migrations
 {
     /// <inheritdoc />
@@ -27,7 +25,6 @@ namespace LifeSync.Migrations
                 {
                     table.PrimaryKey("PK_AI_Logs", x => x.Id);
                 });
-
             migrationBuilder.CreateTable(
                 name: "AITaskSuggestions",
                 schema: "public",
@@ -47,7 +44,6 @@ namespace LifeSync.Migrations
                 {
                     table.PrimaryKey("PK_AITaskSuggestions", x => x.Id);
                 });
-
             migrationBuilder.CreateTable(
                 name: "Habits",
                 schema: "public",
@@ -65,7 +61,6 @@ namespace LifeSync.Migrations
                 {
                     table.PrimaryKey("PK_Habits", x => x.Id);
                 });
-
             migrationBuilder.CreateTable(
                 name: "Reminders",
                 schema: "public",
@@ -80,7 +75,6 @@ namespace LifeSync.Migrations
                 {
                     table.PrimaryKey("PK_Reminders", x => x.Id);
                 });
-
             migrationBuilder.CreateTable(
                 name: "TaskTags",
                 schema: "public",
@@ -94,7 +88,6 @@ namespace LifeSync.Migrations
                 {
                     table.PrimaryKey("PK_TaskTags", x => x.Id);
                 });
-
             migrationBuilder.CreateTable(
                 name: "UserSettings",
                 schema: "public",
@@ -110,7 +103,6 @@ namespace LifeSync.Migrations
                 {
                     table.PrimaryKey("PK_UserSettings", x => x.Id);
                 });
-
             migrationBuilder.CreateTable(
                 name: "Task_Tag_Relation",
                 schema: "public",
@@ -124,34 +116,27 @@ namespace LifeSync.Migrations
                     table.PrimaryKey("PK_Task_Tag_Relation", x => new { x.TaskId, x.TagId });
                 });
         }
-
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
                 name: "AI_Logs",
                 schema: "public");
-
             migrationBuilder.DropTable(
                 name: "AITaskSuggestions",
                 schema: "public");
-
             migrationBuilder.DropTable(
                 name: "Habits",
                 schema: "public");
-
             migrationBuilder.DropTable(
                 name: "Reminders",
                 schema: "public");
-
             migrationBuilder.DropTable(
                 name: "TaskTags",
                 schema: "public");
-
             migrationBuilder.DropTable(
                 name: "UserSettings",
                 schema: "public");
-
             migrationBuilder.DropTable(
                 name: "Task_Tag_Relation",
                 schema: "public");
