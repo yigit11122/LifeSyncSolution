@@ -245,22 +245,31 @@ namespace LifeSync.Controllers
             }
         }
 
-        // 🔥 YENİ: AI öneri endpointi
         [HttpPost("ai-suggest")]
         public async Task<IActionResult> GetAISuggestion([FromBody] AIRequest request)
         {
             try
             {
-                var handler = new HttpClientHandler();
-                handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true; // 🔥 SSL doğrulama kapalı
+                if (request == null || string.IsNullOrWhiteSpace(request.Task + request.Description + request.Category))
+                    return BadRequest("Gönderilen veri boş veya eksik.");
 
-                using var client = new HttpClient(handler);
-                var aiResponse = await client.PostAsync("http://127.0.0.1:5001/suggest",
-                    new StringContent(System.Text.Json.JsonSerializer.Serialize(request), Encoding.UTF8, "application/json"));
+                var payload = new
+                {
+                    task = request.Task,
+                    description = request.Description,
+                    category = request.Category
+                };
+
+                var json = System.Text.Json.JsonSerializer.Serialize(payload);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                using var client = new HttpClient();
+                var aiResponse = await client.PostAsync("http://127.0.0.1:5001/suggest", content);
 
                 if (!aiResponse.IsSuccessStatusCode)
                 {
-                    return StatusCode((int)aiResponse.StatusCode, "AI server hatası");
+                    var errorDetail = await aiResponse.Content.ReadAsStringAsync();
+                    return StatusCode((int)aiResponse.StatusCode, new { error = "AI sunucu hatası", detail = errorDetail });
                 }
 
                 var result = await aiResponse.Content.ReadAsStringAsync();
@@ -271,6 +280,7 @@ namespace LifeSync.Controllers
                 return StatusCode(500, new { error = ex.Message });
             }
         }
+
 
     }
 

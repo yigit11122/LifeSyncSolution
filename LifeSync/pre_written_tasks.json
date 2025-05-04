@@ -1,0 +1,122 @@
+[
+  {
+    "id": 1,
+    "name": "Morning Stretch",
+    "category": "Health",
+    "description": "Start your day with a 5-minute stretching routine.",
+    "priority": "Medium",
+    "estimated_time": "5 min"
+  },
+  {
+    "id": 2,
+    "name": "Drink Water",
+    "category": "Health",
+    "description": "Stay hydrated – drink a glass of water.",
+    "priority": "High",
+    "estimated_time": "2 min"
+  },
+  {
+    "id": 3,
+    "name": "Read a Book",
+    "category": "Learning",
+    "description": "Read for 30 minutes to expand your knowledge.",
+    "priority": "Medium",
+    "estimated_time": "30 min"
+  },
+  {
+    "id": 4,
+    "name": "Summarize Your Notes",
+    "category": "Learning",
+    "description": "Review and summarize today's notes for better retention.",
+    "priority": "High",
+    "estimated_time": "15 min"
+  },
+  {
+    "id": 5,
+    "name": "Write Daily Goals",
+    "category": "Productivity",
+    "description": "Set your top 3 goals for the day to stay focused.",
+    "priority": "High",
+    "estimated_time": "10 min"
+  },
+  {
+    "id": 6,
+    "name": "Declutter Workspace",
+    "category": "Productivity",
+    "description": "Organize your desk for better focus and efficiency.",
+    "priority": "Medium",
+    "estimated_time": "10 min"
+  },
+  {
+    "id": 7,
+    "name": "Meditate",
+    "category": "Mindfulness",
+    "description": "Practice a 5-minute guided meditation to reduce stress.",
+    "priority": "Medium",
+    "estimated_time": "5 min"
+  },
+  {
+    "id": 8,
+    "name": "Deep Work Session",
+    "category": "Productivity",
+    "description": "Focus on a single task for 90 minutes without distractions.",
+    "priority": "High",
+    "estimated_time": "90 min"
+  },
+  {
+    "id": 9,
+    "name": "Evening Reflection",
+    "category": "Mindfulness",
+    "description": "Spend 10 minutes reflecting on your day and planning for tomorrow.",
+    "priority": "Medium",
+    "estimated_time": "10 min"
+  },
+  {
+    "id": 10,
+    "name": "Physical Exercise",
+    "category": "Health",
+    "description": "Engage in 30 minutes of any physical activity (jogging, yoga, etc.).",
+    "priority": "High",
+    "estimated_time": "30 min"
+  },
+  {
+    "id": 11,
+    "name": "Plan Weekly Schedule",
+    "category": "Productivity",
+    "description": "Outline your major tasks for the upcoming week.",
+    "priority": "High",
+    "estimated_time": "30 min"
+  },
+  {
+    "id": 12,
+    "name": "Practice Gratitude",
+    "category": "Mindfulness",
+    "description": "Write down 3 things you are grateful for today.",
+    "priority": "Low",
+    "estimated_time": "5 min"
+  },
+  {
+    "id": 13,
+    "name": "Study a New Language",
+    "category": "Learning",
+    "description": "Spend 20 minutes practicing a new language.",
+    "priority": "Medium",
+    "estimated_time": "20 min"
+  },
+  {
+    "id": 14,
+    "name": "Declutter Digital Files",
+    "category": "Productivity",
+    "description": "Organize files and clean up your digital workspace.",
+    "priority": "Medium",
+    "estimated_time": "20 min"
+  },
+  {
+    "id": 15,
+    "name": "Set Long-Term Goals",
+    "category": "Learning",
+    "description": "Write down your long-term goals and action steps to achieve them.",
+    "priority": "High",
+    "estimated_time": "45 min"
+  }
+]

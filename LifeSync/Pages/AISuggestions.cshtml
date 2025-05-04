@@ -1,5 +1,5 @@
-﻿@page
-@model LifeSync.Pages.AISuggestionsModel
+﻿@page "/AlSuggestion"
+@model LifeSync.Pages.AlSuggestionModel
 @{
     ViewData["Title"] = "LifeSync - AI Task Recommender";
 }
@@ -41,7 +41,7 @@
             const description = document.getElementById("description").value;
             const category = document.getElementById("category").value;
 
-            const response = await fetch('/api/ai-suggest', {  // ✅ backend'e doğru yoldan atıyoruz
+            const response = await fetch('/api/ai-suggest', {
                 method: 'POST',
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ task, description, category })
@@ -53,6 +53,8 @@
             }
 
             const suggestions = await response.json();
+            console.log("Gelen veri:", suggestions); // 👈 BUNU GÖZLEMLE
+
             const list = document.getElementById("recommendationList");
             list.innerHTML = "";
 
@@ -76,6 +78,7 @@
 
             showToast();
         }
+
 
         function showToast() {
             const toast = document.getElementById("toast");

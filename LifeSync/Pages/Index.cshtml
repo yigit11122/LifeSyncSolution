@@ -60,7 +60,8 @@
             <div class="card">
                 <h2>🤖 AI Görev Önerileri</h2>
                 <p>Yapay Zeka ile sana özel görev önerileri almak için aşağıdan geçebilirsin.</p>
-                <a href="/AISuggestionModel" class="btn-link">
+                <a href="/AlSuggestion" class="btn-link">
+                    <!-- ✨ DÜZELTTİK ✨ -->
                     <span>✨ AI ile Görev Önerisi Al</span>
                 </a>
             </div>
@@ -70,4 +71,32 @@
 
 @section Scripts {
     <script src="/js/site.js"></script>
+    <script src="/js/todoist.js"></script>
+    <script src="/js/notion.js"></script>
+    <script src="/js/lifeSync.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sources = ['todoist', 'notion', 'lifesync', 'lifesync-task'];
+
+            if (urlParams.get('source') === 'todoist' && urlParams.get('code')) {
+                fetchTodoistTasks().then(tasks => {
+                    if (tasks) displayData(tasks, 'todoist');
+                });
+            }
+
+            if (urlParams.get('source') === 'notion' && urlParams.get('code')) {
+                fetchNotionPages().then(pages => {
+                    if (pages) displayData(pages, 'notion');
+                });
+            }
+
+            sources.forEach(source => {
+                fetchDataFromBackend(source).then(data => {
+                    if (data) displayData(data, source);
+                });
+            });
+        });
+    </script>
 }
