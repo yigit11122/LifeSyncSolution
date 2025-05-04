@@ -12,7 +12,7 @@
         <nav class="nav-links">
             <a asp-page="/Index">📋 Ana Sayfa</a>
             <a asp-page="/Privacy">🔒 Gizlilik</a>
-            <a asp-page="/AiSuggestionsHistory">🕒 Geçmiş aramalar</a>
+            
             <a asp-page="/Settings">⚙️ Ayarlar</a>
             
         </nav>
@@ -21,6 +21,8 @@
     <div class="container">
         <h1>📜 Geçmiş AI Önerileri</h1>
         <ul id="historyList"></ul>
+        <button onclick="clearHistory()">🗑️ Clear History</button>
+
     </div>
 </div>
 
@@ -28,7 +30,7 @@
 
 @section Scripts {
     <script>
-        function loadHistory() {
+                function loadHistory() {
             const list = document.getElementById("historyList");
             list.innerHTML = "";
 
@@ -39,13 +41,77 @@
                 return;
             }
 
-            history.forEach(s => {
-                const item = document.createElement("li");
-                item.innerHTML = `<strong>${s.name}</strong> [${s.category}] - <em>${s.priority}</em><br><span style="color:gray;">${s.description}</span>`;
-                list.appendChild(item);
+            history.forEach((entry, index) => {
+                const input = entry.input;
+                const suggestions = entry.suggestions;
+
+                const container = document.createElement("li");
+                container.style.marginBottom = "30px";
+                container.style.padding = "20px";
+                container.style.border = "1px solid #ddd";
+                container.style.borderRadius = "12px";
+                container.style.backgroundColor = "#f9f9f9";
+                container.style.boxShadow = "0 2px 5px rgba(0, 0, 0, 0.05)";
+
+                // Show user input
+                const inputBlock = document.createElement("div");
+                inputBlock.style.marginBottom = "10px";
+                inputBlock.innerHTML = `
+                    <h3 style="margin-bottom: 10px;">🧾 Kullanıcı Girdisi</h3>
+                    <p><strong>📝 Task:</strong> ${input.task}</p>
+                    <p><strong>📄 Açıklama:</strong> ${input.description}</p>
+                    <p><strong>📂 Kategori:</strong> ${input.category}</p>
+                `;
+                container.appendChild(inputBlock);
+
+                // Show suggestions
+                const suggestionHeader = document.createElement("h4");
+                suggestionHeader.textContent = "🤖 AI Önerileri";
+                suggestionHeader.style.marginTop = "15px";
+                container.appendChild(suggestionHeader);
+
+                const suggestionList = document.createElement("ul");
+                suggestionList.style.listStyleType = "none";
+                suggestionList.style.padding = "0";
+
+                suggestions.forEach(s => {
+                    const suggestionItem = document.createElement("li");
+                    suggestionItem.style.padding = "10px";
+                    suggestionItem.style.marginBottom = "10px";
+                    suggestionItem.style.borderRadius = "8px";
+
+                    // Color based on priority
+                    if (s.priority.toLowerCase() === "high") {
+                        suggestionItem.style.backgroundColor = "#e6ffed";
+                        suggestionItem.style.borderLeft = "6px solid #28a745";
+                    } else if (s.priority.toLowerCase() === "medium") {
+                        suggestionItem.style.backgroundColor = "#fff9e6";
+                        suggestionItem.style.borderLeft = "6px solid #ffc107";
+                    } else if (s.priority.toLowerCase() === "low") {
+                        suggestionItem.style.backgroundColor = "#ffe6e6";
+                        suggestionItem.style.borderLeft = "6px solid #dc3545";
+                    }
+
+                    suggestionItem.innerHTML = `
+                        <strong>${s.name}</strong> [${s.category}] -
+                        <em style="color: #555;">${s.priority}</em><br>
+                        <small style="color: gray;">${s.description}</small>
+                    `;
+                    suggestionList.appendChild(suggestionItem);
+                });
+
+                container.appendChild(suggestionList);
+                list.appendChild(container);
             });
+        }
+
+
+        function clearHistory() {
+            localStorage.removeItem("aiSuggestionHistory");
+            loadHistory();
         }
 
         loadHistory();
     </script>
+
 }

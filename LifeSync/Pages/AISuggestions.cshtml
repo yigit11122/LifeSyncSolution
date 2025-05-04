@@ -12,7 +12,7 @@
         <nav class="nav-links">
             <a asp-page="/Index">📋 Ana Sayfa</a>
             <a asp-page="/Privacy">🔒 Gizlilik</a>
-            <a asp-page="/AiSuggestionsHistory">🕒 Geçmiş aramalar</a>
+           
             <a asp-page="/Settings">⚙️ Ayarlar</a>
 
         </nav>
@@ -22,10 +22,22 @@
         <h1>LifeSync</h1>
         <h2>AI Task Recommender</h2>
 
-        <input type="text" id="task" placeholder="Task Name">
-        <input type="text" id="description" placeholder="Description">
-        <input type="text" id="category" placeholder="Category">
-        <button onclick="getSuggestion()">Get Suggestion</button>
+        <div style="display: flex; flex-direction: column; gap: 10px; max-width: 400px;">
+            <input required type="text" id="task" placeholder="📝 Task Name" style="padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
+            <input required type="text" id="description" placeholder="📄 Description" style="padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
+            <input required type="text" id="category" placeholder="📂 Category" style="padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+                <button onclick="getSuggestion()" style="padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                    🤖 Get Suggestion
+                </button>
+
+                <a href="/AiSuggestionsHistory" style="text-align: center; text-decoration: none; padding: 10px; background-color: #6c757d; color: white; border-radius: 8px;">
+                    🕒 Geçmiş Önerilere Git
+                </a>
+            </div>
+
+        </div>
+
 
         <h3>Recommendations:</h3>
         <ul id="recommendationList"></ul>
@@ -38,7 +50,7 @@
 
 @section Scripts {
     <script>
-        async function getSuggestion() {
+                async function getSuggestion() {
             const task = document.getElementById("task").value;
             const description = document.getElementById("description").value;
             const category = document.getElementById("category").value;
@@ -62,18 +74,27 @@
 
             suggestions.forEach(suggestion => {
                 const item = document.createElement("li");
-                item.innerText = `${suggestion.name} [${suggestion.category}] - Priority: ${suggestion.priority}`;
+                        item.innerHTML = `
+            <div style="padding: 10px; border-radius: 10px; margin: 10px 0;">
+                <strong>${suggestion.name}</strong>
+                <span style="color: #666;">[${suggestion.category}]</span> -
+                <span style="font-weight: bold;">${suggestion.priority}</span><br>
+                <small style="color: gray;">${suggestion.description}</small>
+            </div>
+        `;
 
-                if (suggestion.priority.toLowerCase() === "high") {
-                    item.style.backgroundColor = "#e6ffed";
-                    item.style.borderLeft = "6px solid #28a745";
-                } else if (suggestion.priority.toLowerCase() === "medium") {
-                    item.style.backgroundColor = "#fff9e6";
-                    item.style.borderLeft = "6px solid #ffc107";
-                } else if (suggestion.priority.toLowerCase() === "low") {
-                    item.style.backgroundColor = "#ffe6e6";
-                    item.style.borderLeft = "6px solid #dc3545";
-                }
+
+                        if (suggestion.priority.toLowerCase() === "high") {
+            item.style.backgroundColor = "#e6ffed";
+            item.style.borderLeft = "6px solid #28a745";
+        } else if (suggestion.priority.toLowerCase() === "medium") {
+            item.style.backgroundColor = "#fff9e6";
+            item.style.borderLeft = "6px solid #ffc107";
+        } else if (suggestion.priority.toLowerCase() === "low") {
+            item.style.backgroundColor = "#ffe6e6";
+            item.style.borderLeft = "6px solid #dc3545";
+        }
+
 
                 const saveBtn = document.createElement("button");
                 saveBtn.textContent = "⭐ Favoriye Kaydet";
@@ -89,9 +110,16 @@
             });
 
             showToast();
-            saveToHistory(suggestions);
 
+            // ✅ Only save the properly structured record
+            const userInputRecord = {
+                input: { task, description, category },
+                suggestions: suggestions
+            };
+
+            saveToHistory(userInputRecord);
         }
+
 
         async function saveToFavorites(suggestion) {
             const payload = {
@@ -128,11 +156,12 @@
                 }, 500);
             }, 3000);
         }
-                function saveToHistory(suggestions) {
+                        function saveToHistory(record) {
             let history = JSON.parse(localStorage.getItem("aiSuggestionHistory")) || [];
-            history.push(...suggestions);
+            history.push(record);
             localStorage.setItem("aiSuggestionHistory", JSON.stringify(history));
         }
+
 
     </script>
 }
