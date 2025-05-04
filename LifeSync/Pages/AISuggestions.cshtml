@@ -53,7 +53,7 @@
             }
 
             const suggestions = await response.json();
-            console.log("Gelen veri:", suggestions); // 👈 BUNU GÖZLEMLE
+            console.log("Gelen veri:", suggestions);
 
             const list = document.getElementById("recommendationList");
             list.innerHTML = "";
@@ -73,15 +73,45 @@
                     item.style.borderLeft = "6px solid #dc3545";
                 }
 
+                const saveBtn = document.createElement("button");
+                saveBtn.textContent = "⭐ Favoriye Kaydet";
+                saveBtn.style.marginLeft = "15px";
+                saveBtn.style.padding = "5px 10px";
+                saveBtn.style.cursor = "pointer";
+                saveBtn.onclick = async () => {
+                    await saveToFavorites(suggestion);
+                };
+
+                item.appendChild(saveBtn);
                 list.appendChild(item);
             });
 
             showToast();
         }
 
+        async function saveToFavorites(suggestion) {
+            const payload = {
+                name: suggestion.name,
+                category: suggestion.category,
+                estimatedTime: suggestion.estimated_time
+            };
 
-        function showToast() {
+            const response = await fetch("/api/ai/save-task", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                showToast("⭐ Görev favorilere kaydedildi!");
+            } else {
+                alert("Kaydetme başarısız.");
+            }
+        }
+
+        function showToast(msg = "✅ Suggestion ready!") {
             const toast = document.getElementById("toast");
+            toast.innerText = msg;
             toast.style.visibility = "visible";
             toast.style.opacity = "1";
             toast.style.bottom = "50px";

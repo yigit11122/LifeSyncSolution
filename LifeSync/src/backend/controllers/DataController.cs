@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Text; // 🔥 HTTP POST için gerekli
+using System.Text;
 using System.Threading.Tasks;
 
 namespace LifeSync.Controllers
@@ -281,10 +281,36 @@ namespace LifeSync.Controllers
             }
         }
 
+        [HttpPost("ai/save-task")]
+        public async Task<IActionResult> SaveSuggestedTask([FromBody] AITaskRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.Name))
+                    return BadRequest("Görev adı boş olamaz.");
 
+                var task = new TaskItem
+                {
+                    Id = Guid.NewGuid(),
+                    Content = $"{request.Name} | {request.Category} | Tahmini Süre: {request.EstimatedTime}",
+                    CreatedAt = DateTime.UtcNow,
+                    Completed = false,
+                    Source = "lifesync-task",
+                    UserId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48")
+                };
+
+                await _context.Tasks.AddAsync(task);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Görev kaydedildi." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
     }
 
-    // 🔥 Kullanılan Modeller
     public class SyncDataRequest
     {
         public string Source { get; set; } = string.Empty;
@@ -306,5 +332,12 @@ namespace LifeSync.Controllers
         public string Task { get; set; } = "";
         public string Description { get; set; } = "";
         public string Category { get; set; } = "";
+    }
+
+    public class AITaskRequest
+    {
+        public string Name { get; set; } = "";
+        public string Category { get; set; } = "";
+        public string EstimatedTime { get; set; } = "";
     }
 }
