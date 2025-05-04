@@ -1,0 +1,51 @@
+﻿@page
+@model LifeSync.Pages.AiSuggestionsHistoryModel
+
+@{
+    ViewData["Title"] = "LifeSync - Recomended Tasks History";
+}
+<div class="layout">
+    <aside class="sidebar">
+        <div class="logo">
+            <h4>🧠 LifeSync</h4>
+        </div>
+        <nav class="nav-links">
+            <a asp-page="/Index">📋 Ana Sayfa</a>
+            <a asp-page="/Privacy">🔒 Gizlilik</a>
+            <a asp-page="/AiSuggestionsHistory">🕒 Geçmiş aramalar</a>
+            <a asp-page="/Settings">⚙️ Ayarlar</a>
+            
+        </nav>
+    </aside>
+
+    <div class="container">
+        <h1>📜 Geçmiş AI Önerileri</h1>
+        <ul id="historyList"></ul>
+    </div>
+</div>
+
+
+
+@section Scripts {
+    <script>
+        function loadHistory() {
+            const list = document.getElementById("historyList");
+            list.innerHTML = "";
+
+            const history = JSON.parse(localStorage.getItem("aiSuggestionHistory")) || [];
+
+            if (history.length === 0) {
+                list.innerHTML = "<li>Henüz öneri yok.</li>";
+                return;
+            }
+
+            history.forEach(s => {
+                const item = document.createElement("li");
+                item.innerHTML = `<strong>${s.name}</strong> [${s.category}] - <em>${s.priority}</em><br><span style="color:gray;">${s.description}</span>`;
+                list.appendChild(item);
+            });
+        }
+
+        loadHistory();
+    </script>
+}

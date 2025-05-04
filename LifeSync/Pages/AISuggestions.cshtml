@@ -12,7 +12,9 @@
         <nav class="nav-links">
             <a asp-page="/Index">📋 Ana Sayfa</a>
             <a asp-page="/Privacy">🔒 Gizlilik</a>
+            <a asp-page="/AiSuggestionsHistory">🕒 Geçmiş aramalar</a>
             <a asp-page="/Settings">⚙️ Ayarlar</a>
+
         </nav>
     </aside>
 
@@ -87,6 +89,8 @@
             });
 
             showToast();
+            saveToHistory(suggestions);
+
         }
 
         async function saveToFavorites(suggestion) {
@@ -124,5 +128,11 @@
                 }, 500);
             }, 3000);
         }
+                function saveToHistory(suggestions) {
+            let history = JSON.parse(localStorage.getItem("aiSuggestionHistory")) || [];
+            history.push(...suggestions);
+            localStorage.setItem("aiSuggestionHistory", JSON.stringify(history));
+        }
+
     </script>
 }
