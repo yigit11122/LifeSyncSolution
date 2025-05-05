@@ -10,9 +10,8 @@
         <nav class="nav-links">
             <a asp-page="/Index">📋 Ana Sayfa</a>
             <a asp-page="/Privacy">🔒 Gizlilik</a>
-        
+            <a asp-page="/AiSuggestionsHistory">🕒 Geçmiş aramalar</a>
             <a asp-page="/Settings">⚙️ Ayarlar</a>
-
         </nav>
     </aside>
 
@@ -60,6 +59,12 @@
                     <label><strong>Son Tarih</strong></label><br />
                     <input type="date" name="DueDate" class="form-control"
                            value="@(Model.Task.DueDate.HasValue ? Model.Task.DueDate.Value.ToString("yyyy-MM-dd") : "")" />
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <label><strong>Anımsatıcı Tarihi</strong> (opsiyonel)</label><br />
+                    <input type="datetime-local" name="ReminderDate" class="form-control"
+                           value="@(Model.Reminder?.ScheduledAt.ToString("yyyy-MM-ddTHH:mm") ?? "")" />
                 </div>
 
                 <div style="margin-bottom: 10px;">

@@ -15,6 +15,7 @@ namespace LifeSync.Pages
         }
 
         public List<TaskItem> Tasks { get; set; } = new();
+        public List<Reminder> Reminders { get; set; } = new(); // 🆕 Reminder listesi eklendi
 
         [BindProperty]
         public string TaskTitle { get; set; } = "";
@@ -31,11 +32,20 @@ namespace LifeSync.Pages
         [BindProperty]
         public DateTime? TaskDueDate { get; set; }
 
+        [BindProperty]
+        public DateTime? ReminderDate { get; set; }
+
         public async Task OnGetAsync()
         {
+            var userId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48");
+
             Tasks = await _context.Tasks
-                .Where(t => t.Source == "lifesync-task")
+                .Where(t => t.Source == "lifesync-task" && t.UserId == userId)
                 .OrderByDescending(t => t.CreatedAt)
+                .ToListAsync();
+
+            Reminders = await _context.Reminders
+                .Where(r => r.UserId == userId)
                 .ToListAsync();
         }
 
@@ -48,28 +58,52 @@ namespace LifeSync.Pages
             }
 
             DateTime? parsedDueDate = null;
-            if (Request.Form.TryGetValue("TaskDueDate", out var dateValue) && !string.IsNullOrWhiteSpace(dateValue))
+            if (Request.Form.TryGetValue("TaskDueDate", out var dueValue) && !string.IsNullOrWhiteSpace(dueValue))
             {
-                if (DateTime.TryParse(dateValue, out var parsed))
-                    parsedDueDate = DateTime.SpecifyKind(parsed, DateTimeKind.Utc); // 🛠️ Hata burada düzeltildi
+                if (DateTime.TryParse(dueValue, out var parsedDue))
+                    parsedDueDate = DateTime.SpecifyKind(parsedDue, DateTimeKind.Local).ToUniversalTime();
             }
+
+            DateTime? parsedReminder = null;
+            if (Request.Form.TryGetValue("ReminderDate", out var remValue) && !string.IsNullOrWhiteSpace(remValue))
+            {
+                if (DateTime.TryParse(remValue, out var parsedRem))
+                    parsedReminder = DateTime.SpecifyKind(parsedRem, DateTimeKind.Local).ToUniversalTime();
+            }
+
 
             var contentFormatted = $"{TaskTitle} | {TaskTag} | {TaskContent}";
 
+            var taskId = Guid.NewGuid();
+            var userId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48");
+
             var task = new TaskItem
             {
-                Id = Guid.NewGuid(),
+                Id = taskId,
                 Content = contentFormatted,
                 CreatedAt = DateTime.UtcNow,
                 DueDate = parsedDueDate,
                 Source = "lifesync-task",
                 Completed = false,
-                UserId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48")
+                UserId = userId
             };
 
             _context.Tasks.Add(task);
-            await _context.SaveChangesAsync();
 
+            if (parsedReminder.HasValue)
+            {
+                var reminder = new Reminder
+                {
+                    Id = Guid.NewGuid(),
+                    Title = contentFormatted,
+                    ScheduledAt = parsedReminder.Value,
+                    UserId = userId
+                };
+
+                _context.Reminders.Add(reminder);
+            }
+
+            await _context.SaveChangesAsync();
             return RedirectToPage();
         }
 
@@ -79,6 +113,13 @@ namespace LifeSync.Pages
             if (task != null)
             {
                 _context.Tasks.Remove(task);
+
+                // Eşleşen reminder varsa sil
+                var reminder = await _context.Reminders
+                    .FirstOrDefaultAsync(r => r.Title == task.Content && r.UserId == task.UserId);
+                if (reminder != null)
+                    _context.Reminders.Remove(reminder);
+
                 await _context.SaveChangesAsync();
             }
 

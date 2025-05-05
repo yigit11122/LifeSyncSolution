@@ -11,7 +11,6 @@
             <a asp-page="/Index">📋 Ana Sayfa</a>
             <a asp-page="/Privacy">🔒 Gizlilik</a>
             <a asp-page="/Settings">⚙️ Ayarlar</a>
-       
         </nav>
     </aside>
 
@@ -62,7 +61,6 @@
                 <h2>🤖 AI Görev Önerileri</h2>
                 <p>Yapay Zeka ile sana özel görev önerileri almak için aşağıdan geçebilirsin.</p>
                 <a href="/AlSuggestion" class="btn-link">
-                    <!-- ✨ DÜZELTTİK ✨ -->
                     <span>✨ AI ile Görev Önerisi Al</span>
                 </a>
             </div>
@@ -95,7 +93,23 @@
 
             sources.forEach(source => {
                 fetchDataFromBackend(source).then(data => {
-                    if (data) displayData(data, source);
+                    if (data) {
+                        // 🔔 Hatırlatıcı tarihi varsa content'e ekle
+                        if (source === 'lifesync-task') {
+                            data.forEach(t => {
+                                if (t.startDate) {
+                                    const dt = new Date(t.startDate);
+                                    const dateStr = dt.toLocaleString('tr-TR', {
+                                        year: 'numeric', month: '2-digit', day: '2-digit',
+                                        hour: '2-digit', minute: '2-digit'
+                                    });
+                                    t.content += ` (🔔 ${dateStr})`;
+                                }
+                            });
+                        }
+
+                        displayData(data, source);
+                    }
                 });
             });
         });

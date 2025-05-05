@@ -98,15 +98,19 @@ namespace LifeSync.Controllers
                     if (source == "todoist" || source == "lifesync-task")
                     {
                         DateTime? parsedDueDate = null;
+                        DateTime? parsedStartDate = null;
+
                         if (!string.IsNullOrWhiteSpace(item.DueDate) && DateTime.TryParse(item.DueDate, out var due))
                         {
-                            if (due.Year >= 1900)
-                                parsedDueDate = DateTime.SpecifyKind(due, DateTimeKind.Local).ToUniversalTime();
+                            parsedDueDate = due;
                         }
 
-                        var createdAt = item.CreatedAt.Kind == DateTimeKind.Utc
-                            ? item.CreatedAt
-                            : DateTime.SpecifyKind(item.CreatedAt, DateTimeKind.Local).ToUniversalTime();
+                        if (!string.IsNullOrWhiteSpace(item.StartDate) && DateTime.TryParse(item.StartDate, out var start))
+                        {
+                            parsedStartDate = start;
+                        }
+
+                        var createdAt = item.CreatedAt;
 
                         _context.Tasks.Add(new TaskItem
                         {
@@ -118,6 +122,17 @@ namespace LifeSync.Controllers
                             Source = source,
                             UserId = userId
                         });
+
+                        if (parsedStartDate.HasValue)
+                        {
+                            _context.Reminders.Add(new Reminder
+                            {
+                                Id = Guid.NewGuid(),
+                                Title = item.Content,
+                                ScheduledAt = parsedStartDate.Value,
+                                UserId = userId
+                            });
+                        }
                     }
                     else if (source == "notion" || source == "lifesync")
                     {
@@ -125,7 +140,7 @@ namespace LifeSync.Controllers
                         {
                             Id = itemId,
                             Content = item.Content,
-                            CreatedAt = item.CreatedAt.ToUniversalTime(),
+                            CreatedAt = item.CreatedAt,
                             Source = source,
                             UserId = userId
                         });
@@ -309,6 +324,33 @@ namespace LifeSync.Controllers
                 return StatusCode(500, new { error = ex.Message });
             }
         }
+
+        [HttpGet("reminders/data")]
+        public async Task<IActionResult> GetReminders()
+        {
+            try
+            {
+                var userId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48");
+
+                var localNow = DateTime.Now;
+                var localFrom = localNow.AddMinutes(-10);
+
+                var utcNow = localNow.ToUniversalTime();
+                var utcFrom = localFrom.ToUniversalTime();
+
+                var reminders = await _context.Reminders
+                    .Where(r => r.UserId == userId && r.ScheduledAt >= utcFrom && r.ScheduledAt <= utcNow)
+                    .OrderBy(r => r.ScheduledAt)
+                    .ToListAsync();
+
+                return Ok(reminders);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = $"Reminder verisi alınamadı: {ex.Message}" });
+            }
+        }
+
     }
 
     public class SyncDataRequest

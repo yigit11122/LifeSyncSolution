@@ -13,6 +13,12 @@ function removeMarkdown(text) {
         .trim();
 }
 
+// Local tarih inputunu UTC'ye çevir
+function toUtcISOStringFromLocalInput(localDateStr) {
+    const local = new Date(localDateStr);
+    return new Date(local.getTime() - local.getTimezoneOffset() * 60000).toISOString();
+}
+
 // Veriyi backend'e gönder
 async function saveToBackend(items, source) {
     try {
@@ -27,8 +33,8 @@ async function saveToBackend(items, source) {
                 };
 
                 if (source === "todoist" || source === "lifesync-task") {
-                    base.DueDate = item.dueDate ? new Date(item.dueDate).toISOString() : null;
-                    base.StartDate = item.startDate ? new Date(item.startDate).toISOString() : null;
+                    base.DueDate = item.dueDate ? toUtcISOStringFromLocalInput(item.dueDate) : null;
+                    base.StartDate = item.startDate ? toUtcISOStringFromLocalInput(item.startDate) : null;
                     base.Completed = item.completed ?? false;
                 }
 
@@ -89,6 +95,7 @@ function preprocessTasks(data, source) {
             id: task.id,
             content: removeMarkdown(task.content || 'No Title'),
             dueDate: task.dueDate || task.due?.date || null,
+            startDate: task.startDate || null,
             completed: task.completed ?? false,
             createdAt: task.createdAt || task.created_at || new Date().toISOString(),
             source: source
@@ -137,6 +144,7 @@ function displayData(data, source) {
                 <li>
                     <input type="checkbox" onchange="markTaskAsCompleted('${t.id}')" />
                     <span>${escapeHtml(t.content)}</span>
+                    ${t.startDate ? `<br/><small>⏰ Hatırlatma: ${new Date(t.startDate).toLocaleString()}</small>` : ''}
                 </li>
             `).join('');
             container.innerHTML += `<h3>Aktif Görevler</h3><ul>${listHtml}</ul>`;

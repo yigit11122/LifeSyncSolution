@@ -1,12 +1,10 @@
-﻿// HTML güvenli gösterim
-function escapeHtml(text) {
+﻿function escapeHtml(text) {
     const div = document.createElement("div");
     div.textContent = text;
     return div.innerHTML;
 }
 
 ////================== NOTLAR ==================////
-
 async function saveLifeSyncNote(content) {
     const note = {
         id: crypto.randomUUID(),
@@ -51,15 +49,14 @@ async function loadLifeSyncNotes() {
 }
 
 ////================== GÖREVLER ==================////
-
-async function saveLifeSyncTask(content) {
+async function saveLifeSyncTask(content, reminderDateTime = null) {
     const task = {
         id: crypto.randomUUID(),
         content: content,
         createdAt: new Date().toISOString(),
         completed: false,
         dueDate: null,
-        startDate: null
+        startDate: reminderDateTime ? new Date(reminderDateTime).toISOString() : null
     };
 
     const requestBody = {
@@ -113,6 +110,7 @@ async function loadLifeSyncTasks() {
                 `<li>
                     <input type="checkbox" onchange="markLifeSyncTaskCompleted('${t.id}')">
                     <span>${escapeHtml(t.content)}</span>
+                    ${t.startDate ? `<small><br/>⏰ Hatırlatma: ${new Date(t.startDate).toLocaleString()}</small>` : ""}
                 </li>`
             ).join('')}</ul>`;
         }
@@ -127,12 +125,60 @@ async function loadLifeSyncTasks() {
     }
 }
 
+////================== BİLDİRİM KONTROLÜ ==================////
+const shownReminderIds = new Set();
 
+async function checkRemindersAndNotify() {
+    try {
+        const res = await fetch("/api/reminders/data");
+        if (!res.ok) throw new Error(await res.text());
+        const reminders = await res.json();
+
+        const now = new Date();
+        const fiveMinutesAgo = new Date(now.getTime() - 5 * 60000);
+
+        reminders.forEach(rem => {
+            const scheduled = new Date(rem.scheduledAt); // dikkat: backend ISO string döndürmeli
+            if (
+                scheduled > fiveMinutesAgo &&
+                scheduled <= now &&
+                !shownReminderIds.has(rem.id)
+            ) {
+                showNotification("⏰ Görev Hatırlatıcısı", rem.title || "Bir görevin var!");
+                shownReminderIds.add(rem.id);
+                console.log("🔔 Bildirim gösterildi:", rem.title, scheduled.toLocaleString());
+            }
+        });
+    } catch (err) {
+        console.error("🔔 Hatırlatıcı kontrol hatası:", err.message);
+    }
+}
+
+function showNotification(title, body) {
+    if (Notification.permission === "granted") {
+        new Notification(title, { body });
+    }
+}
+
+function requestNotificationPermission() {
+    if ("Notification" in window && Notification.permission !== "granted") {
+        Notification.requestPermission().then(permission => {
+            if (permission === "granted") {
+                console.log("🔔 Bildirim izni verildi.");
+            } else {
+                console.warn("❌ Bildirim izni reddedildi.");
+            }
+        });
+    }
+}
+
+////================== BAŞLATICI ==================////
 document.addEventListener("DOMContentLoaded", () => {
     loadLifeSyncNotes();
     loadLifeSyncTasks();
+    requestNotificationPermission();
+    setInterval(checkRemindersAndNotify, 60000);
 
-    // Not ekleme
     const noteBtn = document.getElementById("lifesync-submit");
     const noteInput = document.getElementById("lifesync-input");
     if (noteBtn && noteInput) {
@@ -145,15 +191,17 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Görev ekleme
     const taskBtn = document.getElementById("lifesync-task-submit");
     const taskInput = document.getElementById("lifesync-task-input");
+    const reminderInput = document.getElementById("lifesync-task-reminder");
     if (taskBtn && taskInput) {
         taskBtn.addEventListener("click", () => {
             const content = taskInput.value.trim();
+            const reminder = reminderInput?.value;
             if (content) {
-                saveLifeSyncTask(content);
+                saveLifeSyncTask(content, reminder);
                 taskInput.value = '';
+                if (reminderInput) reminderInput.value = '';
             }
         });
     }

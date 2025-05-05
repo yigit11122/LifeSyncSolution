@@ -10,15 +10,19 @@
         <nav class="nav-links">
             <a asp-page="/Index">📋 Ana Sayfa</a>
             <a asp-page="/Privacy">🔒 Gizlilik</a>
-        
+            <a asp-page="/AiSuggestionsHistory">🕒 Geçmiş aramalar</a>
             <a asp-page="/Settings">⚙️ Ayarlar</a>
-
         </nav>
     </aside>
 
     <main class="content">
         <h1>🧾 Görevlerim</h1>
         <p class="subtitle">Kendi görevlerini başlık ve etiketleriyle oluşturabilir, takip edebilirsin.</p>
+
+        <!-- 🔔 Bildirim izni butonu -->
+        <div style="margin-bottom: 15px;">
+            <button onclick="requestNotificationPermission()" class="btn btn-outline-primary">🔔 Bildirimlere İzin Ver</button>
+        </div>
 
         <div class="note-form">
             <form method="post" asp-page-handler="Add">
@@ -49,6 +53,11 @@
                     <input type="date" name="TaskDueDate" class="form-control" />
                 </div>
 
+                <div style="margin-bottom: 10px;">
+                    <label><strong>Anımsatıcı Tarihi (opsiyonel)</strong></label><br />
+                    <input type="datetime-local" name="ReminderDate" class="form-control" />
+                </div>
+
                 <button type="submit" class="btn btn-primary">➕ Görevi Ekle</button>
             </form>
         </div>
@@ -69,6 +78,8 @@
                     var tag = parts.Length > 1 ? parts[1] : "Etiket yok";
                     var desc = parts.Length > 2 ? parts[2] : "";
 
+                    var reminder = Model.Reminders.FirstOrDefault(r => r.Title == task.Content);
+
                     <div class="card">
                         <h2>@title</h2>
                         <p><strong>Etiket:</strong> @tag</p>
@@ -77,6 +88,11 @@
                         @if (task.DueDate.HasValue)
                         {
                             <p><strong>Son Tarih:</strong> @task.DueDate.Value.ToShortDateString()</p>
+                        }
+
+                        @if (reminder != null)
+                        {
+                            <p><strong>🔔 Hatırlatıcı:</strong> @reminder.ScheduledAt.ToString("dd.MM.yyyy HH:mm")</p>
                         }
 
                         <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 10px;">
@@ -91,3 +107,7 @@
         }
     </main>
 </div>
+
+@section Scripts {
+    <script src="/js/lifeSync.js"></script>
+}
