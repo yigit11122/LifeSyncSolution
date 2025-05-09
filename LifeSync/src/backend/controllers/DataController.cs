@@ -350,7 +350,6 @@ namespace LifeSync.Controllers
                 return StatusCode(500, new { error = $"Reminder verisi alınamadı: {ex.Message}" });
             }
         }
-
     }
 
     public class SyncDataRequest

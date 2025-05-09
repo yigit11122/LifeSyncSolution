@@ -4,6 +4,10 @@ using Microsoft.Extensions.Logging;
 using backend.models;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
+using System.Collections.Generic;
+using System;
+using System.Linq;
 
 namespace LifeSync.Pages
 {
@@ -21,6 +25,14 @@ namespace LifeSync.Pages
         public IActionResult OnGet()
         {
             _logger.LogInformation("Index sayfası yüklendi.");
+
+            // 🔧 Session kontrolü düzeltildi (UsersEmail → UserEmail)
+            if (HttpContext.Session.GetString("UserEmail") == null)
+            {
+                _logger.LogInformation("Kullanıcı oturum açmamış. Login sayfasına yönlendiriliyor.");
+                return RedirectToPage("/Login");
+            }
+
             return Page();
         }
 
@@ -33,14 +45,48 @@ namespace LifeSync.Pages
 
             try
             {
+                var userEmail = HttpContext.Session.GetString("UserEmail");
+
+                if (string.IsNullOrEmpty(userEmail))
+                {
+                    _logger.LogWarning("Oturumdan Email alınamadı, kullanıcı giriş yapmamış.");
+                    return RedirectToPage("/Login");
+                }
+
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
+
+                if (user == null)
+                {
+                    _logger.LogWarning("Kullanıcı veritabanında bulunamadı.");
+                    return RedirectToPage("/Login");
+                }
+
                 List<object> data = source.ToLower() switch
                 {
-                    "todoist" => (await _context.Tasks.Where(t => t.Source == source).ToListAsync()).Cast<object>().ToList(),
-                    "googlecalendar" => (await _context.Events.Where(e => e.Source == source).ToListAsync()).Cast<object>().ToList(),
-                    "notion" => (await _context.Notes.Where(n => n.Source == source).ToListAsync()).Cast<object>().ToList(),
-                    "fitbit" => (await _context.Tasks.Where(t => t.Source == source).ToListAsync()).Cast<object>().ToList(),
-                    "lifesync" => (await _context.Notes.Where(n => n.Source == source).ToListAsync()).Cast<object>().ToList(),
-                    "lifesync-task" => (await _context.Tasks.Where(t => t.Source == source).ToListAsync()).Cast<object>().ToList(),
+                    "todoist" => (await _context.Tasks
+                        .Where(t => t.Source == source && t.UserId == user.UserId)
+                        .ToListAsync()).Cast<object>().ToList(),
+
+                    "googlecalendar" => (await _context.Events
+                        .Where(e => e.Source == source && e.UserId == user.UserId)
+                        .ToListAsync()).Cast<object>().ToList(),
+
+                    "notion" => (await _context.Notes
+                        .Where(n => n.Source == source && n.UserId == user.UserId)
+                        .ToListAsync()).Cast<object>().ToList(),
+
+                    "fitbit" => (await _context.Tasks
+                        .Where(t => t.Source == source && t.UserId == user.UserId)
+                        .ToListAsync()).Cast<object>().ToList(),
+
+                    "lifesync" => (await _context.Notes
+                        .Where(n => n.Source == source && n.UserId == user.UserId)
+                        .ToListAsync()).Cast<object>().ToList(),
+
+                    "lifesync-task" => (await _context.Tasks
+                        .Where(t => t.Source == source && t.UserId == user.UserId)
+                        .ToListAsync()).Cast<object>().ToList(),
+
                     _ => throw new Exception("Geçersiz kaynak")
                 };
 

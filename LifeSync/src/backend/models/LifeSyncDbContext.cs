@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace backend.models
 {
@@ -10,6 +11,8 @@ namespace backend.models
         public DbSet<Event> Events { get; set; }
         public DbSet<Note> Notes { get; set; }
         public DbSet<OAuthToken> OAuthTokens { get; set; }
+        public DbSet<Users> Users { get; set; }  // ⬅️ Eksik olan bu
+
 
         // 🔥 Yeni eklenenler:
         public DbSet<Habit> Habits { get; set; }
@@ -185,4 +188,18 @@ namespace backend.models
         public Guid TaskId { get; set; }
         public Guid TagId { get; set; }
     }
+
+    public class Users
+    {
+        [Key]
+        public Guid UserId { get; set; }
+        [Required]
+        public string Email { get; set; } = "";
+        [Required]
+        public string Username { get; set; } = "";
+        [Required]
+        public string Password { get; set; } = "";
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
 }
+

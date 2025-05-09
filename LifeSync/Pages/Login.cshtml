@@ -1,0 +1,48 @@
+﻿@page
+@model LifeSync.Pages.LoginModel
+@{
+    ViewData["Title"] = "Giriş Yap";
+}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="/css/site.css" />
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="logo">🧠 LifeSync</div>
+            <nav class="nav-links">
+                <a href="/Index">📋 Ana Sayfa</a>
+                <a href="/Privacy">🔒 Gizlilik</a>
+            </nav>
+        </aside>
+        <main class="content">
+            <h1 style="text-align: center;">Giriş Yap</h1>
+            <p class="subtitle" style="text-align: center;">Hesabına giriş yap ve devam et.</p>
+
+            @if (!string.IsNullOrEmpty(Model.Message))
+            {
+                <div style="color: red; text-align: center; margin-top: 10px; font-weight: bold;">
+                    @Model.Message
+                </div>
+            }
+
+            <div class="card" style="max-width: 400px; margin: 20px auto; padding: 30px;">
+                <form method="post" asp-page="/Login">
+                    <label>📧 Email</label><br />
+                    <input type="email" name="Email" required class="form-input" /><br /><br />
+                    <label>🔑 Şifre</label><br />
+                    <input type="password" name="Password" required class="form-input" /><br /><br />
+                    <button type="submit" class="action-button" style="width: 100%;">🔐 Giriş Yap</button>
+                </form>
+                <div style="margin-top: 15px; text-align: center;">
+                    <a href="/SignUp" style="color: #007BFF;">📝 Kayıt Ol</a>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
