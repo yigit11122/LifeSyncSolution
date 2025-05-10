@@ -8,27 +8,62 @@
 <head>
     <meta charset="utf-8" />
     <title>Giriş Başarılı</title>
-    <meta http-equiv="refresh" content="1;url=/Index" />
+    <meta http-equiv="refresh" content="4;url=/Index" />
     <style>
-        body {
-            background-color: #F7F8FA;
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
             font-family: 'Segoe UI', sans-serif;
+            background-color: #e3e6e9;
+            overflow: hidden;
+        }
+
+        .container {
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            color: #333;
+            width: 100vw;
+            backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.3);
+            position: relative;
         }
 
-        .message {
-            text-align: center;
-            font-size: 1.5rem;
+        .icon {
+            width: 150px;
+            height: 150px;
+            animation: pulse 1.6s ease-in-out infinite;
+        }
+
+            .icon img {
+                width: 100%;
+                height: 100%;
+            }
+
+        @@keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.9;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 0.9;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="message">
-        :white_check_mark: Başarılı giriş yapıldı. Ana sayfaya yönlendiriliyorsunuz...
+    <div class="container">
+        <div class="icon">
+            <img src="/media/brain-svgrepo-com.svg" alt="Yükleniyor" />
+        </div>
     </div>
 </body>
 </html>
