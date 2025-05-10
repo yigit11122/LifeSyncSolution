@@ -3,47 +3,56 @@
 @{
     ViewData["Title"] = "Gizlilik Politikası";
 }
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"]</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/site.css" />
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="logo">🧠 <span>LifeSync</span></div>
+            <nav class="nav-links">
+                <a href="/Index">📋 Ana Sayfa</a>
+                <a href="/Privacy">🔒 Gizlilik</a>
+                <a href="/Settings">⚙️ Ayarlar</a>
+            </nav>
+        </aside>
 
-<div class="layout">
-    <aside class="sidebar">
-        <div class="logo">🧠 <span>LifeSync</span></div>
-        <nav class="nav-links">
-            <a href="/Index">📋 Ana Sayfa</a>
-            <a href="/Privacy">🔒 Gizlilik</a>
-        
-            <a href="/Settings">⚙️ Ayarlar</a>
-            
-        </nav>
+        <main class="content">
+            <div class="card form-card" style="max-width: 850px; margin: auto;">
+                <h1 style="text-align:center;">🔐 Gizlilik Politikası</h1>
+                <p class="subtitle">Kullanıcı verilerinizin güvenliği bizim için birinci önceliktir.</p>
 
-    </aside>
+                <div class="privacy-card">
+                    <h3>📥 1. Veri Toplama</h3>
+                    <p>LifeSync yalnızca hizmetlerin çalışması için gerekli olan minimum düzeyde veri toplar. Bu veriler e-posta adresiniz, notlarınız, görevleriniz gibi içeriklerle sınırlıdır.</p>
+                </div>
 
-    <main class="content">
-        <h1>Gizlilik Politikası</h1>
-        <p class="subtitle">Kullanıcı verilerinizin güvenliği bizim için önemlidir.</p>
+                <div class="privacy-card">
+                    <h3>🗃️ 2. Veri Saklama</h3>
+                    <p>Verileriniz güvenli veri tabanlarında saklanır ve sadece sizin erişiminize açıktır. Üçüncü taraflarla paylaşılmaz ve reklam amacıyla kullanılmaz.</p>
+                </div>
 
-        <div class="privacy-card">
-            <h3>1. Veri Toplama</h3>
-            <p>LifeSync yalnızca hizmetlerin çalışması için gerekli olan minimum düzeyde veri toplar. Bu veriler e-posta adresiniz, notlarınız, görevleriniz gibi içeriklerle sınırlıdır.</p>
-        </div>
+                <div class="privacy-card">
+                    <h3>🔗 3. Üçüncü Taraf Entegrasyonları</h3>
+                    <p>Todoist, Notion gibi entegrasyonlar yalnızca sizin izninizle gerçekleştirilir ve veriler yalnızca görüntülenir, kaydedilmez.</p>
+                </div>
 
-        <div class="privacy-card">
-            <h3>2. Veri Saklama</h3>
-            <p>Verileriniz güvenli veri tabanlarında saklanır ve sadece sizin erişiminize açıktır. Üçüncü taraflarla paylaşılmaz ve reklam amacıyla kullanılmaz.</p>
-        </div>
+                <div class="privacy-card">
+                    <h3>🍪 4. Çerez Kullanımı</h3>
+                    <p>LifeSync, kullanıcı deneyimini iyileştirmek için minimum düzeyde çerez kullanır. Çerezler yalnızca oturum yönetimi ve teknik işler için kullanılır.</p>
+                </div>
 
-        <div class="privacy-card">
-            <h3>3. Üçüncü Taraf Entegrasyonları</h3>
-            <p>Todoist, Notion gibi entegrasyonlar yalnızca sizin izninizle gerçekleştirilir ve veriler yalnızca görüntülenir, kaydedilmez.</p>
-        </div>
-
-        <div class="privacy-card">
-            <h3>4. Çerez Kullanımı</h3>
-            <p>LifeSync, kullanıcı deneyimini iyileştirmek için minimum düzeyde çerez kullanır. Çerezler yalnızca oturum yönetimi ve teknik işler için kullanılır.</p>
-        </div>
-
-        <div class="privacy-card">
-            <h3>5. Haklarınız</h3>
-            <p>Verilerinizi istediğiniz zaman görüntüleyebilir, silebilir ya da dışa aktarabilirsiniz. Gizliliğiniz bizim önceliğimizdir. Gizlilikle ilgili her konuda bize <strong>privacy@lifesync.com</strong> adresinden ulaşabilirsiniz.</p>
-        </div>
-    </main>
-</div>
+                <div class="privacy-card">
+                    <h3>🛡️ 5. Haklarınız</h3>
+                    <p>Verilerinizi istediğiniz zaman görüntüleyebilir, silebilir ya da dışa aktarabilirsiniz. Gizliliğiniz bizim önceliğimizdir. Gizlilikle ilgili her konuda bize <strong>privacy@lifesync.com</strong> adresinden ulaşabilirsiniz.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
