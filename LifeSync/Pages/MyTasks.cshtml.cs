@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using backend.models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
 
 namespace LifeSync.Pages
 {
@@ -15,7 +16,7 @@ namespace LifeSync.Pages
         }
 
         public List<TaskItem> Tasks { get; set; } = new();
-        public List<Reminder> Reminders { get; set; } = new(); // 🆕 Reminder listesi eklendi
+        public List<Reminder> Reminders { get; set; } = new();
 
         [BindProperty]
         public string TaskTitle { get; set; } = "";
@@ -35,25 +36,42 @@ namespace LifeSync.Pages
         [BindProperty]
         public DateTime? ReminderDate { get; set; }
 
-        public async Task OnGetAsync()
+        public async Task<IActionResult> OnGetAsync()
         {
-            var userId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48");
+            var userEmail = HttpContext.Session.GetString("UserEmail");
+            if (string.IsNullOrEmpty(userEmail))
+                return RedirectToPage("/Login");
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
+            if (user == null)
+                return RedirectToPage("/Login");
 
             Tasks = await _context.Tasks
-                .Where(t => t.Source == "lifesync-task" && t.UserId == userId)
+                .Where(t => t.Source == "lifesync-task" && t.UserId == user.UserId)
                 .OrderByDescending(t => t.CreatedAt)
                 .ToListAsync();
 
             Reminders = await _context.Reminders
-                .Where(r => r.UserId == userId)
+                .Where(r => r.UserId == user.UserId)
                 .ToListAsync();
+
+            return Page();
         }
 
         public async Task<IActionResult> OnPostAddAsync()
         {
+            var userEmail = HttpContext.Session.GetString("UserEmail");
+            if (string.IsNullOrEmpty(userEmail))
+                return RedirectToPage("/Login");
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
+            if (user == null)
+                return RedirectToPage("/Login");
+
             if (string.IsNullOrWhiteSpace(TaskTitle) || string.IsNullOrWhiteSpace(TaskContent))
             {
                 ModelState.AddModelError("", "Başlık ve içerik boş olamaz.");
+                await OnGetAsync();
                 return Page();
             }
 
@@ -71,11 +89,9 @@ namespace LifeSync.Pages
                     parsedReminder = DateTime.SpecifyKind(parsedRem, DateTimeKind.Local).ToUniversalTime();
             }
 
-
             var contentFormatted = $"{TaskTitle} | {TaskTag} | {TaskContent}";
 
             var taskId = Guid.NewGuid();
-            var userId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48");
 
             var task = new TaskItem
             {
@@ -85,7 +101,7 @@ namespace LifeSync.Pages
                 DueDate = parsedDueDate,
                 Source = "lifesync-task",
                 Completed = false,
-                UserId = userId
+                UserId = user.UserId
             };
 
             _context.Tasks.Add(task);
@@ -97,7 +113,7 @@ namespace LifeSync.Pages
                     Id = Guid.NewGuid(),
                     Title = contentFormatted,
                     ScheduledAt = parsedReminder.Value,
-                    UserId = userId
+                    UserId = user.UserId
                 };
 
                 _context.Reminders.Add(reminder);
@@ -109,14 +125,21 @@ namespace LifeSync.Pages
 
         public async Task<IActionResult> OnPostDeleteAsync(Guid id)
         {
-            var task = await _context.Tasks.FindAsync(id);
+            var userEmail = HttpContext.Session.GetString("UserEmail");
+            if (string.IsNullOrEmpty(userEmail))
+                return RedirectToPage("/Login");
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
+            if (user == null)
+                return RedirectToPage("/Login");
+
+            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.Id == id && t.UserId == user.UserId);
             if (task != null)
             {
                 _context.Tasks.Remove(task);
 
-                // Eşleşen reminder varsa sil
                 var reminder = await _context.Reminders
-                    .FirstOrDefaultAsync(r => r.Title == task.Content && r.UserId == task.UserId);
+                    .FirstOrDefaultAsync(r => r.Title == task.Content && r.UserId == user.UserId);
                 if (reminder != null)
                     _context.Reminders.Remove(reminder);
 

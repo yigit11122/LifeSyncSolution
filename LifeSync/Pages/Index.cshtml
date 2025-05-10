@@ -28,7 +28,8 @@
             <h1>Hoş Geldin 👋</h1>
             <p class="subtitle">Günlük görevlerini ve notlarını buradan yönetebilirsin.</p>
 
-            <div class="card-grid">
+            <!-- 🔗 Todoist + Notion Grid -->
+            <div class="card-grid grid-sync">
                 <div class="card">
                     <h2>📌 Todoist Görevlerin</h2>
                     <p>Görevlerinizi Todoist üzerinden senkronize edin ve buradan yönetin.</p>
@@ -48,18 +49,19 @@
                         <span class="label">Notion'a Bağlan</span>
                     </button>
                 </div>
+            </div>
 
+            <!-- 📋 Diğer Link Kartları -->
+            <div class="card-grid grid-links">
                 <div class="card">
                     <h2>📝 Benim Notlarım</h2>
                     <p>LifeSync içinde oluşturduğun notları düzenlemek için aşağıdan yönetim sayfasına gidebilirsin.</p>
-                    <div class="list" id="lifesync-list"></div>
                     <a href="/MyNotes" class="btn-link">🛠️ Notları Yönet</a>
                 </div>
 
                 <div class="card">
                     <h2>🧾 Benim Görevlerin</h2>
                     <p>Kendi oluşturduğun görevleri düzenlemek için aşağıdan yönetim sayfasına gidebilirsin.</p>
-                    <div class="list" id="lifesync-task-list"></div>
                     <a href="/MyTasks" class="btn-link">🛠️ Görevleri Yönet</a>
                 </div>
 
@@ -82,7 +84,7 @@
 
             document.addEventListener('DOMContentLoaded', function () {
                 const urlParams = new URLSearchParams(window.location.search);
-                const sources = ['todoist', 'notion', 'lifesync', 'lifesync-task'];
+                const sources = ['todoist', 'notion'];
 
                 if (urlParams.get('source') === 'todoist' && urlParams.get('code')) {
                     fetchTodoistTasks().then(tasks => {
@@ -98,21 +100,7 @@
 
                 sources.forEach(source => {
                     fetchDataFromBackend(source).then(data => {
-                        if (data) {
-                            if (source === 'lifesync-task') {
-                                data.forEach(t => {
-                                    if (t.startDate) {
-                                        const dt = new Date(t.startDate);
-                                        const dateStr = dt.toLocaleString('tr-TR', {
-                                            year: 'numeric', month: '2-digit', day: '2-digit',
-                                            hour: '2-digit', minute: '2-digit'
-                                        });
-                                        t.content += ` (🔔 ${dateStr})`;
-                                    }
-                                });
-                            }
-                            displayData(data, source);
-                        }
+                        if (data) displayData(data, source);
                     });
                 });
             });

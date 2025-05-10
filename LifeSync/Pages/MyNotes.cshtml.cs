@@ -2,6 +2,7 @@ using backend.models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
 
 namespace LifeSync.Pages
 {
@@ -25,16 +26,42 @@ namespace LifeSync.Pages
         [BindProperty]
         public string NoteContent { get; set; } = "";
 
-        public async Task OnGetAsync()
+        public async Task<IActionResult> OnGetAsync()
         {
+            var userEmail = HttpContext.Session.GetString("UserEmail");
+            if (string.IsNullOrEmpty(userEmail))
+            {
+                return RedirectToPage("/Login");
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
+            if (user == null)
+            {
+                return RedirectToPage("/Login");
+            }
+
             Notes = await _context.Notes
-                .Where(n => n.Source == "lifesync")
+                .Where(n => n.Source == "lifesync" && n.UserId == user.UserId)
                 .OrderByDescending(n => n.CreatedAt)
                 .ToListAsync();
+
+            return Page();
         }
 
         public async Task<IActionResult> OnPostAddAsync()
         {
+            var userEmail = HttpContext.Session.GetString("UserEmail");
+            if (string.IsNullOrEmpty(userEmail))
+            {
+                return RedirectToPage("/Login");
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
+            if (user == null)
+            {
+                return RedirectToPage("/Login");
+            }
+
             if (string.IsNullOrWhiteSpace(NoteTitle) || string.IsNullOrWhiteSpace(NoteContent) || string.IsNullOrWhiteSpace(NoteTag))
             {
                 ModelState.AddModelError(string.Empty, "Tüm alanlar zorunludur.");
@@ -50,17 +77,28 @@ namespace LifeSync.Pages
                 Content = fullContent,
                 CreatedAt = DateTime.UtcNow,
                 Source = "lifesync",
-                UserId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48") // varsayýlan kullanýcý
+                UserId = user.UserId
             });
 
             await _context.SaveChangesAsync();
-
             return RedirectToPage("/MyNotes");
         }
 
         public async Task<IActionResult> OnPostDeleteAsync(Guid id)
         {
-            var note = await _context.Notes.FirstOrDefaultAsync(n => n.Id == id && n.Source == "lifesync");
+            var userEmail = HttpContext.Session.GetString("UserEmail");
+            if (string.IsNullOrEmpty(userEmail))
+            {
+                return RedirectToPage("/Login");
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
+            if (user == null)
+            {
+                return RedirectToPage("/Login");
+            }
+
+            var note = await _context.Notes.FirstOrDefaultAsync(n => n.Id == id && n.Source == "lifesync" && n.UserId == user.UserId);
             if (note != null)
             {
                 _context.Notes.Remove(note);

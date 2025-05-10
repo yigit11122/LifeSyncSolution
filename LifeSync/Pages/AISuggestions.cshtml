@@ -1,7 +1,7 @@
 ﻿@page "/AlSuggestion"
 @model LifeSync.Pages.AlSuggestionModel
 @{
-    ViewData["Title"] = "LifeSync - AI Task Recommender";
+    ViewData["Title"] = "LifeSync - Yapay Zeka Görev Önerici";
 }
 
 <div class="layout">
@@ -12,45 +12,40 @@
         <nav class="nav-links">
             <a asp-page="/Index">📋 Ana Sayfa</a>
             <a asp-page="/Privacy">🔒 Gizlilik</a>
-           
             <a asp-page="/Settings">⚙️ Ayarlar</a>
-
         </nav>
     </aside>
 
     <div class="container">
-        <h1>LifeSync</h1>
-        <h2>AI Task Recommender</h2>
+        <h1>LifeSync - Yapay Zeka Görev Önerici</h1>
 
         <div style="display: flex; flex-direction: column; gap: 10px; max-width: 400px;">
-            <input required type="text" id="task" placeholder="📝 Task Name" style="padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
-            <input required type="text" id="description" placeholder="📄 Description" style="padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
-            <input required type="text" id="category" placeholder="📂 Category" style="padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
+            <input required type="text" id="task" placeholder="📝 Görev Adı" style="padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
+            <input required type="text" id="description" placeholder="📄 Açıklama" style="padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
+            <input required type="text" id="category" placeholder="📂 Kategori" style="padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
             <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
                 <button onclick="getSuggestion()" style="padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer;">
-                    🤖 Get Suggestion
+                    🤖 Öneri Al
                 </button>
 
                 <a href="/AiSuggestionsHistory" style="text-align: center; text-decoration: none; padding: 10px; background-color: #6c757d; color: white; border-radius: 8px;">
                     🕒 Geçmiş Önerilere Git
                 </a>
             </div>
-
         </div>
 
-
-        <h3>Recommendations:</h3>
+        <h3>Öneriler:</h3>
         <ul id="recommendationList"></ul>
     </div>
 </div>
 
 <div id="toast" style="visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 1000; left: 50%; transform: translateX(-50%); bottom: 30px; font-size: 17px; opacity: 0; transition: opacity 0.5s, bottom 0.5s;">
-    ✅ Suggestion ready!
+    ✅ Öneri hazır!
 </div>
 
 @section Scripts {
     <script>
-                async function getSuggestion() {
+        async function getSuggestion() {
             const task = document.getElementById("task").value;
             const description = document.getElementById("description").value;
             const category = document.getElementById("category").value;
@@ -74,27 +69,25 @@
 
             suggestions.forEach(suggestion => {
                 const item = document.createElement("li");
-                        item.innerHTML = `
-            <div style="padding: 10px; border-radius: 10px; margin: 10px 0;">
-                <strong>${suggestion.name}</strong>
-                <span style="color: #666;">[${suggestion.category}]</span> -
-                <span style="font-weight: bold;">${suggestion.priority}</span><br>
-                <small style="color: gray;">${suggestion.description}</small>
-            </div>
-        `;
+                item.innerHTML = `
+                    <div style="padding: 10px; border-radius: 10px; margin: 10px 0;">
+                        <strong>${suggestion.name}</strong>
+                        <span style="color: #666;">[${suggestion.category}]</span> -
+                        <span style="font-weight: bold;">${suggestion.priority}</span><br>
+                        <small style="color: gray;">${suggestion.description}</small>
+                    </div>
+                `;
 
-
-                        if (suggestion.priority.toLowerCase() === "high") {
-            item.style.backgroundColor = "#e6ffed";
-            item.style.borderLeft = "6px solid #28a745";
-        } else if (suggestion.priority.toLowerCase() === "medium") {
-            item.style.backgroundColor = "#fff9e6";
-            item.style.borderLeft = "6px solid #ffc107";
-        } else if (suggestion.priority.toLowerCase() === "low") {
-            item.style.backgroundColor = "#ffe6e6";
-            item.style.borderLeft = "6px solid #dc3545";
-        }
-
+                if (suggestion.priority.toLowerCase() === "high") {
+                    item.style.backgroundColor = "#e6ffed";
+                    item.style.borderLeft = "6px solid #28a745";
+                } else if (suggestion.priority.toLowerCase() === "medium") {
+                    item.style.backgroundColor = "#fff9e6";
+                    item.style.borderLeft = "6px solid #ffc107";
+                } else if (suggestion.priority.toLowerCase() === "low") {
+                    item.style.backgroundColor = "#ffe6e6";
+                    item.style.borderLeft = "6px solid #dc3545";
+                }
 
                 const saveBtn = document.createElement("button");
                 saveBtn.textContent = "⭐ Favoriye Kaydet";
@@ -111,7 +104,7 @@
 
             showToast();
 
-            // ✅ Only save the properly structured record
+            // ✅ Yalnızca düzgün yapılandırılmış kaydı sakla
             const userInputRecord = {
                 input: { task, description, category },
                 suggestions: suggestions
@@ -119,7 +112,6 @@
 
             saveToHistory(userInputRecord);
         }
-
 
         async function saveToFavorites(suggestion) {
             const payload = {
@@ -141,7 +133,7 @@
             }
         }
 
-        function showToast(msg = "✅ Suggestion ready!") {
+        function showToast(msg = "✅ Öneri hazır!") {
             const toast = document.getElementById("toast");
             toast.innerText = msg;
             toast.style.visibility = "visible";
@@ -156,12 +148,11 @@
                 }, 500);
             }, 3000);
         }
-                        function saveToHistory(record) {
+
+        function saveToHistory(record) {
             let history = JSON.parse(localStorage.getItem("aiSuggestionHistory")) || [];
             history.push(record);
             localStorage.setItem("aiSuggestionHistory", JSON.stringify(history));
         }
-
-
     </script>
 }

@@ -2,7 +2,7 @@
 @model LifeSync.Pages.AiSuggestionsHistoryModel
 
 @{
-    ViewData["Title"] = "LifeSync - Recomended Tasks History";
+    ViewData["Title"] = "LifeSync - Önerilen Görevler Geçmişi";
 }
 <div class="layout">
     <aside class="sidebar">
@@ -12,16 +12,16 @@
         <nav class="nav-links">
             <a asp-page="/Index">📋 Ana Sayfa</a>
             <a asp-page="/Privacy">🔒 Gizlilik</a>
-            
+
             <a asp-page="/Settings">⚙️ Ayarlar</a>
-            
+
         </nav>
     </aside>
 
     <div class="container">
-        <h1>📜 Geçmiş AI Önerileri</h1>
+        <h1>📜 Geçmiş Yapay Zeka Önerileri</h1>
         <ul id="historyList"></ul>
-        <button onclick="clearHistory()">🗑️ Clear History</button>
+        <button onclick="clearHistory()">🗑️ Geçmişi Temizle</button>
 
     </div>
 </div>
@@ -58,7 +58,7 @@
                 inputBlock.style.marginBottom = "10px";
                 inputBlock.innerHTML = `
                     <h3 style="margin-bottom: 10px;">🧾 Kullanıcı Girdisi</h3>
-                    <p><strong>📝 Task:</strong> ${input.task}</p>
+                    <p><strong>📝 Görev:</strong> ${input.task}</p>
                     <p><strong>📄 Açıklama:</strong> ${input.description}</p>
                     <p><strong>📂 Kategori:</strong> ${input.category}</p>
                 `;
@@ -66,7 +66,7 @@
 
                 // Show suggestions
                 const suggestionHeader = document.createElement("h4");
-                suggestionHeader.textContent = "🤖 AI Önerileri";
+                suggestionHeader.textContent = "🤖 Yapay Zeka Önerileri";
                 suggestionHeader.style.marginTop = "15px";
                 container.appendChild(suggestionHeader);
 
