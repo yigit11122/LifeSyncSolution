@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc.RazorPages;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Http;
 
 namespace LifeSync.Pages
 {
@@ -12,8 +14,19 @@ namespace LifeSync.Pages
             _logger = logger;
         }
 
-        public void OnGet()
+        public IActionResult OnGet()
         {
+            _logger.LogInformation("Gizlilik sayfası açıldı.");
+
+            var userEmail = HttpContext.Session.GetString("UserEmail");
+
+            if (string.IsNullOrEmpty(userEmail))
+            {
+                _logger.LogWarning("Kullanıcı oturum açmamış. Login sayfasına yönlendiriliyor.");
+                return RedirectToPage("/Login");
+            }
+
+            return Page();
         }
     }
 }
