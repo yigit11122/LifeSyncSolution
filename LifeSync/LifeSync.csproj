@@ -14,7 +14,6 @@
     <Folder Include="src\ml\data\" />
     <Folder Include="src\ml\scripts\" />
     <Folder Include="Views\" />
-    <Folder Include="wwwroot\media\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,6 +27,12 @@
     </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.3.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="wwwroot\media\brain-svgrepo-com.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>
