@@ -35,3 +35,5 @@ function startGoogleCalendarPolling() {
         if (events) displayData(events, 'googleCalendar');
     }, FETCH_INTERVAL);
 }
+
+//TheEnd
