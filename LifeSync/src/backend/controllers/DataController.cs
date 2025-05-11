@@ -304,6 +304,14 @@ namespace LifeSync.Controllers
                 if (string.IsNullOrWhiteSpace(request.Name))
                     return BadRequest("Görev adı boş olamaz.");
 
+                var userEmail = HttpContext.Session.GetString("UserEmail");
+                if (string.IsNullOrEmpty(userEmail))
+                    return Unauthorized(new { error = "Kullanıcı oturum açmamış." });
+
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
+                if (user == null)
+                    return NotFound(new { error = "Kullanıcı bulunamadı." });
+
                 var task = new TaskItem
                 {
                     Id = Guid.NewGuid(),
@@ -311,7 +319,7 @@ namespace LifeSync.Controllers
                     CreatedAt = DateTime.UtcNow,
                     Completed = false,
                     Source = "lifesync-task",
-                    UserId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48")
+                    UserId = user.UserId
                 };
 
                 await _context.Tasks.AddAsync(task);
@@ -324,6 +332,7 @@ namespace LifeSync.Controllers
                 return StatusCode(500, new { error = ex.Message });
             }
         }
+
 
         [HttpGet("reminders/data")]
         public async Task<IActionResult> GetReminders()
