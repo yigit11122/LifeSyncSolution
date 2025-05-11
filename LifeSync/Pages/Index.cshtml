@@ -86,22 +86,23 @@
                 const urlParams = new URLSearchParams(window.location.search);
                 const sources = ['todoist', 'notion'];
 
-                if (urlParams.get('source') === 'todoist' && urlParams.get('code')) {
-                    fetchTodoistTasks().then(tasks => {
-                        if (tasks) displayData(tasks, 'todoist');
-                    });
-                }
-
-                if (urlParams.get('source') === 'notion' && urlParams.get('code')) {
-                    fetchNotionPages().then(pages => {
-                        if (pages) displayData(pages, 'notion');
-                    });
-                }
-
                 sources.forEach(source => {
-                    fetchDataFromBackend(source).then(data => {
-                        if (data) displayData(data, source);
-                    });
+                    const connected = sessionStorage.getItem(`${source}_connected`);
+                    const urlHasCode = urlParams.get('source') === source && urlParams.get('code');
+
+                    if (urlHasCode) {
+                        sessionStorage.setItem(`${source}_connected`, 'true');
+                        // Sayfa bağlantı sonrası parametreyle yüklendiğinde temizle
+                        const cleanUrl = window.location.origin + window.location.pathname;
+                        window.history.replaceState({}, document.title, cleanUrl);
+                    }
+
+                    if (urlHasCode || connected === 'true') {
+                        const fetchFunc = source === 'todoist' ? fetchTodoistTasks : fetchNotionPages;
+                        fetchFunc().then(data => {
+                            if (data) displayData(data, source);
+                        });
+                    }
                 });
             });
         </script>

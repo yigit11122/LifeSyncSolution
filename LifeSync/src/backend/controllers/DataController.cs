@@ -95,22 +95,19 @@ namespace LifeSync.Controllers
                 {
                     Guid itemId = Guid.TryParse(item.Id, out var parsed) ? parsed : Guid.NewGuid();
 
+                    // CreatedAt mutlaka UTC olmalı
+                    var createdAt = DateTime.SpecifyKind(item.CreatedAt, DateTimeKind.Utc);
+
                     if (source == "todoist" || source == "lifesync-task")
                     {
                         DateTime? parsedDueDate = null;
                         DateTime? parsedStartDate = null;
 
                         if (!string.IsNullOrWhiteSpace(item.DueDate) && DateTime.TryParse(item.DueDate, out var due))
-                        {
-                            parsedDueDate = due;
-                        }
+                            parsedDueDate = DateTime.SpecifyKind(due, DateTimeKind.Utc);
 
                         if (!string.IsNullOrWhiteSpace(item.StartDate) && DateTime.TryParse(item.StartDate, out var start))
-                        {
-                            parsedStartDate = start;
-                        }
-
-                        var createdAt = item.CreatedAt;
+                            parsedStartDate = DateTime.SpecifyKind(start, DateTimeKind.Utc);
 
                         _context.Tasks.Add(new TaskItem
                         {
@@ -140,14 +137,27 @@ namespace LifeSync.Controllers
                         {
                             Id = itemId,
                             Content = item.Content,
-                            CreatedAt = item.CreatedAt,
+                            CreatedAt = createdAt,
                             Source = source,
                             UserId = userId
                         });
                     }
                 }
 
-                await _context.SaveChangesAsync();
+
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (Exception saveEx)
+                {
+                    return StatusCode(500, new
+                    {
+                        error = "SaveChanges hatası",
+                        detail = saveEx.ToString()
+                    });
+                }
+
                 return Ok(new { message = $"{request.Source} verileri güncellendi." });
             }
             catch (Exception ex)
@@ -155,6 +165,7 @@ namespace LifeSync.Controllers
                 return StatusCode(500, new { error = $"Sync hatası: {ex.Message}" });
             }
         }
+
 
         [HttpPut("todoist/complete/{id}")]
         public async Task<IActionResult> MarkTaskCompleted(Guid id)
