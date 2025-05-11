@@ -350,10 +350,18 @@ namespace LifeSync.Controllers
         {
             try
             {
-                var userId = Guid.Parse("35529975-876b-4bf6-b919-cafaa64eee48");
+                var userEmail = HttpContext.Session.GetString("UserEmail");
+                if (string.IsNullOrEmpty(userEmail))
+                    return Unauthorized(new { error = "Kullanıcı oturum açmamış." });
+
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
+                if (user == null)
+                    return NotFound(new { error = "Kullanıcı bulunamadı." });
+
+                var userId = user.UserId;
 
                 var localNow = DateTime.Now;
-                var localFrom = localNow.AddMinutes(-10);
+                var localFrom = localNow.AddMinutes(-5); // Frontend ile eşitlemek için 5 dakika
 
                 var utcNow = localNow.ToUniversalTime();
                 var utcFrom = localFrom.ToUniversalTime();
@@ -361,6 +369,13 @@ namespace LifeSync.Controllers
                 var reminders = await _context.Reminders
                     .Where(r => r.UserId == userId && r.ScheduledAt >= utcFrom && r.ScheduledAt <= utcNow)
                     .OrderBy(r => r.ScheduledAt)
+                    .Select(r => new
+                    {
+                        r.Id,
+                        r.Title,
+                        ScheduledAt = r.ScheduledAt.ToString("o"), // ISO 8601 formatı
+                        r.UserId
+                    })
                     .ToListAsync();
 
                 return Ok(reminders);
